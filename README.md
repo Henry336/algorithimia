@@ -17,6 +17,7 @@ python -m algorithimia --encounter triage_line
 Export a static browser trace viewer for an encounter:
 
 ```powershell
+python -m algorithimia --trace-html build/sorting-trace.html
 python -m algorithimia --encounter triage_line --trace-html build/triage-trace.html
 ```
 
@@ -81,7 +82,7 @@ When a policy case fails, the counter now reports a compact debrief bark for the
 ## Trace Metadata
 
 The terminal trace text is generated from structured trace events. Future renderers can consume event kinds such as `comparison`, `arrival`, `urgent_override`, `stable_tie`, `ordinary_guard`, and `served` without parsing player-facing strings.
-The `--trace-html` export writes a self-contained static HTML trace viewer that embeds the current Phase 1 encounter badge and trace-event icon sheets.
+The `--trace-html` export writes a self-contained static HTML trace viewer that embeds the current Phase 1 encounter badge, trace-event icon sheets, and sealed-certification marker sheet when the encounter uses hidden certification cases.
 
 ## Security Note
 

@@ -44,7 +44,7 @@ Visualizers now expose renderer-ready `TraceEvent` values with:
 
 The CLI still calls `encounter_trace(...)` for labels, but those labels are derived from `encounter_trace_events(...)`. Future graphical clients should consume the structured events instead of scraping terminal text.
 
-`algorithimia.trace_viewer` is the first lightweight browser surface. It renders the selected encounter's current trace events into a self-contained HTML file and embeds the Phase 1 encounter badge plus trace-event SVG sheets as data images. This is deliberately a static viewer, not the final renderer or camera choice.
+`algorithimia.trace_viewer` is the first lightweight browser surface. It renders the selected encounter's current trace events into a self-contained HTML file and embeds the Phase 1 encounter badge plus trace-event SVG sheets as data images. Encounters with `certification_cases` also get a sealed-certification summary that shows public/certification counts and the certification marker sheet without exposing hidden case names, inputs, or expected outputs. This is deliberately a static viewer, not the final renderer or camera choice.
 
 ## Near-Term Extension Points
 

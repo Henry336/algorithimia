@@ -10,6 +10,7 @@ from .visualizers import TraceEvent, encounter_trace_events
 ASSET_DIR = Path(__file__).parent / "assets" / "phase1"
 EVENT_SHEET = ASSET_DIR / "trace-event-kinds.svg"
 BADGE_SHEET = ASSET_DIR / "encounter-badges.svg"
+CERTIFICATION_SHEET = ASSET_DIR / "sorting-certification-markers.svg"
 
 EVENT_ICON_CELLS = {
     "comparison": 0,
@@ -38,8 +39,10 @@ def render_trace_viewer(encounter: Encounter) -> str:
     events = encounter_trace_events(encounter)
     event_sheet_uri = _svg_data_uri(EVENT_SHEET)
     badge_sheet_uri = _svg_data_uri(BADGE_SHEET)
+    certification_sheet_uri = _svg_data_uri(CERTIFICATION_SHEET)
     badge_cell = BADGE_CELLS.get(encounter.slug, 0)
     event_rows = "\n".join(_event_row(event, index) for index, event in enumerate(events, start=1))
+    certification_summary = _certification_summary(encounter, certification_sheet_uri)
 
     return f"""<!doctype html>
 <html lang="en">
@@ -108,6 +111,9 @@ def render_trace_viewer(encounter: Encounter) -> str:
     .icon {{
       background-image: url("{event_sheet_uri}");
     }}
+    .cert-icon {{
+      background-image: url("{certification_sheet_uri}");
+    }}
     .prompt {{
       max-width: 72ch;
       color: var(--muted);
@@ -117,6 +123,25 @@ def render_trace_viewer(encounter: Encounter) -> str:
       margin-top: 22px;
       display: grid;
       gap: 10px;
+    }}
+    .certification {{
+      margin-top: 18px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--gold);
+    }}
+    .cert-title {{
+      font-weight: 700;
+    }}
+    .cert-copy {{
+      color: var(--muted);
+      margin-top: 2px;
+      overflow-wrap: anywhere;
     }}
     .event {{
       min-height: 54px;
@@ -162,6 +187,7 @@ def render_trace_viewer(encounter: Encounter) -> str:
       <h1>{html.escape(encounter.title)}</h1>
       <p class="prompt">{html.escape(encounter.prompt)}</p>
     </header>
+{certification_summary}
     <section class="trace" aria-label="Trace events">
 {event_rows}
     </section>
@@ -182,6 +208,21 @@ def _event_row(event: TraceEvent, index: int) -> str:
           <div class="payload">{html.escape(payload)}</div>
         </div>
       </article>"""
+
+
+def _certification_summary(encounter: Encounter, sheet_uri: str) -> str:
+    public_count = len(encounter.cases)
+    certification_count = len(encounter.certification_cases)
+    if certification_count == 0:
+        return ""
+
+    return f"""    <section class="certification" aria-label="Certification checks">
+      <span class="icon cert-icon" aria-hidden="true" style="background-image: url(&quot;{sheet_uri}&quot;); background-position: -32px 0"></span>
+      <div>
+        <div class="cert-title">Sealed certification active</div>
+        <div class="cert-copy">{public_count} public teaching cases and {certification_count} sealed checks. Hidden inputs stay sealed; memorized public answers do not clear this encounter.</div>
+      </div>
+    </section>"""
 
 
 def _svg_data_uri(path: Path) -> str:
