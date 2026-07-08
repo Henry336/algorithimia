@@ -68,6 +68,10 @@ Each ticket is a JSON-compatible object with `id`, `arrival`, and `urgent`.
 Urgent tickets may advance, ties keep arrival order, and after two urgent services the oldest waiting ordinary ticket must be served if one exists.
 The CLI trace previews the starvation-guard case so players see arrivals, urgent overrides, stable ties, ordinary guard behavior, and served ticket ids before reading the case results.
 
+## Trace Metadata
+
+The terminal trace text is generated from structured trace events. Future renderers can consume event kinds such as `comparison`, `arrival`, `urgent_override`, `stable_tie`, `ordinary_guard`, and `served` without parsing player-facing strings.
+
 ## Security Note
 
 Player Python runs in a child process with timeout, isolated mode, a minimal environment, and restricted builtins. This is a baseline local safety model, not a complete sandbox for hostile untrusted code.

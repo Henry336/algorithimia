@@ -11,6 +11,7 @@
 - Added `Triage Line Dispatcher Trial` as a second CLI encounter with urgent-ticket ordering, stable ties, and the two-urgent ordinary guard.
 - Added encounter selection with `python -m algorithimia --encounter triage_line`.
 - Improved the Triage CLI trace so it previews the ordinary-guard case with arrival, urgent override, stable tie, ordinary guard, and served labels.
+- Added renderer-ready trace events with stable kinds, player-facing labels, and metadata payloads while preserving the current CLI trace text.
 
 ## 0.1.0 - 2026-07-08
 

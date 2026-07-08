@@ -8,7 +8,7 @@ Algorithimia currently uses a small Python package organized around a determinis
 - `algorithimia.encounters`: encounter data and test cases.
 - `algorithimia.engine`: gameplay validation flow.
 - `algorithimia.language.python_adapter`: Python-first player-code execution.
-- `algorithimia.visualizers`: deterministic text traces for algorithm feedback.
+- `algorithimia.visualizers`: deterministic trace events and text labels for algorithm feedback.
 
 ## Gameplay Flow
 
@@ -27,8 +27,18 @@ Algorithimia currently uses a small Python package organized around a determinis
 
 Encounter metadata can name a `trace_case_name` when the most useful preview is not the first non-empty fixture. Triage Line uses this to show the ordinary-guard fixture in the CLI trace, including arrival, urgent override, stable tie, ordinary guard, and served labels.
 
+## Trace Visualizer Contract
+
+Visualizers now expose renderer-ready `TraceEvent` values with:
+
+- `kind`: a stable event category such as `comparison`, `arrival`, `urgent_override`, `stable_tie`, `ordinary_guard`, or `served`.
+- `label`: the compact terminal string players see today.
+- `payload`: JSON-compatible details a future renderer can bind to sprites, lanes, badges, or animation states.
+
+The CLI still calls `encounter_trace(...)` for labels, but those labels are derived from `encounter_trace_events(...)`. Future graphical clients should consume the structured events instead of scraping terminal text.
+
 ## Near-Term Extension Points
 
 - Move encounter definitions into data files when content volume grows.
-- Expand trace-producing visualizers into renderer-ready metadata for sorting, queue scheduling, graph traversal, and dynamic programming.
 - Add a UI client after the terminal loop proves the core interaction.
+- Add more event kinds for graph traversal, stack/deque changes, recursion frames, and dynamic programming tables as those encounters land.

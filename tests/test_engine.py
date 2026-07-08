@@ -5,7 +5,7 @@ import unittest
 from algorithimia.encounters import Encounter, EncounterCase, get_encounter
 from algorithimia.engine import GameEngine
 from algorithimia.language.python_adapter import PythonAdapter, PythonExecutionError
-from algorithimia.visualizers import encounter_trace
+from algorithimia.visualizers import encounter_trace, encounter_trace_events
 
 MANUAL_SORT = """
 def solve(values):
@@ -134,6 +134,24 @@ def solve(tickets):
         self.assertIn("stable tie: C keeps urgent arrival order", trace)
         self.assertIn("ordinary guard: A served after two urgent", trace)
         self.assertIn("served A", trace)
+
+    def test_trace_events_preserve_renderer_ready_triage_metadata(self) -> None:
+        events = encounter_trace_events(get_encounter("triage_line"))
+        event_kinds = [event.kind for event in events]
+
+        self.assertIn("arrival", event_kinds)
+        self.assertIn("urgent_override", event_kinds)
+        self.assertIn("stable_tie", event_kinds)
+        self.assertIn("ordinary_guard", event_kinds)
+        self.assertIn("served", event_kinds)
+
+        ordinary_guard = next(event for event in events if event.kind == "ordinary_guard")
+        self.assertEqual("A", ordinary_guard.payload["ticket_id"])
+        self.assertEqual(2, ordinary_guard.payload["urgent_streak"])
+
+    def test_trace_events_keep_existing_terminal_labels(self) -> None:
+        encounter = get_encounter("sorting_slime")
+        self.assertEqual(encounter_trace(encounter), [event.label for event in encounter_trace_events(encounter)])
 
     def test_adapter_requires_solve_function(self) -> None:
         adapter = PythonAdapter()
