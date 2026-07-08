@@ -91,7 +91,7 @@ The terminal trace text is generated from structured trace events. Future render
 The `--trace-html` export writes a self-contained static HTML trace viewer that embeds the current Phase 1 encounter badge, trace-event icon sheets, and sealed-certification marker sheet when the encounter uses hidden certification cases.
 The `--game-html` export writes a self-contained static browser shell with tabbed encounter selection, encounter prompts, run/export commands, trace previews, and sealed-certification status. It does not execute player Python in the browser; code execution still stays in the local CLI runner.
 
-The Sorting Slime tab now includes a browser-playable Queueworks intake scene. Click rune tokens to select and swap them, then use the check/reset buttons to test the visible spill. The slice embeds the current Phase 1 Sorting Slime scene strip, Sorting Slime sprite, and Queue Intake Gate placeholder sprite, shows Mira feedback, and keeps hidden certification data sealed.
+The Sorting Slime tab now includes a browser-playable Queueworks intake scene. Click rune tokens to select and swap them, then use the check/reset buttons to test the visible spill. The slice embeds the current Phase 1 Sorting Slime scene strip, Sorting Slime sprite, and Queue Intake Gate placeholder sprite, shows adjacent inspection marks, flips between jammed and cleared route status, shows Mira feedback, and keeps hidden certification data sealed.
 
 ## Security Note
 

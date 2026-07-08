@@ -200,6 +200,12 @@ def render_game_shell() -> str:
       gap: 12px;
       padding: 12px;
     }}
+    .slice[data-state="cleared"] {{
+      border-color: var(--green);
+    }}
+    .slice[data-state="jammed"] {{
+      border-color: var(--rose);
+    }}
     .scene {{
       min-height: 170px;
       display: grid;
@@ -247,6 +253,48 @@ def render_game_shell() -> str:
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+    }}
+    .slice-status {{
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid var(--line);
+      background: var(--ink);
+      padding: 8px 10px;
+      color: var(--muted);
+    }}
+    .status-chip {{
+      color: var(--gold);
+      font-weight: 700;
+      white-space: nowrap;
+    }}
+    .inspection-marks {{
+      min-height: 36px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      color: var(--muted);
+    }}
+    .inspection-mark {{
+      border: 1px solid var(--line);
+      background: var(--surface);
+      min-height: 36px;
+      display: grid;
+      place-items: center;
+      padding: 6px;
+      text-align: center;
+      font: 0.82rem/1.2 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      overflow-wrap: anywhere;
+    }}
+    .inspection-mark[data-ok="true"] {{
+      border-color: var(--green);
+      color: var(--green);
+    }}
+    .inspection-mark[data-ok="false"] {{
+      border-color: var(--rose);
+      color: var(--rose);
     }}
     .action {{
       border: 1px solid var(--line);
@@ -353,6 +401,9 @@ def render_game_shell() -> str:
       const buttons = Array.from(sortingGame.querySelectorAll('[data-rune-index]'));
       const feedback = sortingGame.querySelector('[data-feedback]');
       const repairLog = sortingGame.querySelector('[data-repair-log]');
+      const status = sortingGame.querySelector('[data-slice-status]');
+      const statusChip = sortingGame.querySelector('[data-status-chip]');
+      const inspectionMarks = Array.from(sortingGame.querySelectorAll('[data-inspection-mark]'));
       let values = initialValues.slice();
       let selectedIndex = null;
       let swaps = 0;
@@ -372,6 +423,30 @@ def render_game_shell() -> str:
         feedback.textContent = message;
       }}
 
+      function renderInspectionMarks() {{
+        inspectionMarks.forEach((mark, index) => {{
+          const left = values[index];
+          const right = values[index + 1];
+          const ok = left <= right;
+          mark.textContent = `${{left}} <= ${{right}}`;
+          mark.dataset.ok = String(ok);
+        }});
+      }}
+
+      function setSliceState(state) {{
+        sortingGame.dataset.state = state;
+        if (state === 'cleared') {{
+          status.textContent = 'Route open: visible spill is ordered.';
+          statusChip.textContent = 'CLEARED';
+        }} else if (state === 'jammed') {{
+          status.textContent = 'Route sealed: at least one adjacent rune is out of order.';
+          statusChip.textContent = 'JAMMED';
+        }} else {{
+          status.textContent = 'Route sealed: inspect and swap the loose runes.';
+          statusChip.textContent = 'INSPECT';
+        }}
+      }}
+
       buttons.forEach((button, index) => {{
         button.addEventListener('click', () => {{
           if (selectedIndex === null) {{
@@ -387,6 +462,8 @@ def render_game_shell() -> str:
             swaps += 1;
             repairLog.textContent = `swap ${{first}} with ${{second}}`;
             selectedIndex = null;
+            renderInspectionMarks();
+            setSliceState(isOrdered() ? 'cleared' : 'jammed');
             setFeedback(isOrdered() ? 'Mira: Good. It works when the mess changes. That is a repair.' : 'Mira: Keep inspecting. The intake still reads out of order.');
           }}
           renderRunes();
@@ -394,6 +471,8 @@ def render_game_shell() -> str:
       }});
 
       sortingGame.querySelector('[data-check-order]').addEventListener('click', () => {{
+        renderInspectionMarks();
+        setSliceState(isOrdered() ? 'cleared' : 'jammed');
         setFeedback(isOrdered() ? 'Mira: Good. It works when the mess changes. That is a repair.' : 'Mira: The gate still sees a larger rune before a smaller one.');
         repairLog.textContent = `checked after ${{swaps}} swap${{swaps === 1 ? '' : 's'}}`;
       }});
@@ -404,9 +483,13 @@ def render_game_shell() -> str:
         swaps = 0;
         setFeedback('Mira: Public spill loaded. Put the runes in smallest-to-largest order.');
         repairLog.textContent = 'spill reset: 5, 1, 4, 2';
+        setSliceState('inspect');
+        renderInspectionMarks();
         renderRunes();
       }});
 
+      setSliceState('inspect');
+      renderInspectionMarks();
       renderRunes();
     }}
   </script>
@@ -478,7 +561,7 @@ def _sorting_slime_playable_slice(
     queue_gate_uri: str,
     sorting_scene_uri: str,
 ) -> str:
-    return f"""        <div class="slice" data-sorting-slime-playfield data-values="5,1,4,2">
+    return f"""        <div class="slice" data-sorting-slime-playfield data-values="5,1,4,2" data-state="inspect">
           <h3>Blocked Queueworks Intake</h3>
           <img class="scene-strip" src="{sorting_scene_uri}" alt="Sorting Slime scene strip">
           <div class="scene" aria-label="Sorting Slime ordering scene">
@@ -490,6 +573,15 @@ def _sorting_slime_playable_slice(
               <button class="rune" type="button" data-rune-index="3" aria-pressed="false"></button>
             </div>
             <img class="sprite" src="{sorting_slime_uri}" alt="Sorting Slime">
+          </div>
+          <div class="slice-status">
+            <span data-slice-status>Route sealed: inspect and swap the loose runes.</span>
+            <strong class="status-chip" data-status-chip>INSPECT</strong>
+          </div>
+          <div class="inspection-marks" aria-label="Adjacent rune inspection marks">
+            <div class="inspection-mark" data-inspection-mark></div>
+            <div class="inspection-mark" data-inspection-mark></div>
+            <div class="inspection-mark" data-inspection-mark></div>
           </div>
           <div class="controls" aria-label="Sorting Slime actions">
             <button class="action primary" type="button" data-check-order>Check order</button>

@@ -23,6 +23,7 @@
 - Added a sealed-certification summary to the static trace viewer for encounters with hidden certification cases.
 - Added a static browser game shell export with tabbed encounter selection, trace previews, run commands, embedded Phase 1 assets, and sealed-certification status.
 - Added a browser-playable Sorting Slime swap/check slice inside the game shell with the Sorting Slime scene strip, Queueworks gate art, Sorting Slime placeholder art, visible rune tokens, Mira feedback, and reset/check controls.
+- Added visible jammed/cleared route status and adjacent inspection marks to the browser-playable Sorting Slime slice.
 
 ## 0.1.0 - 2026-07-08
 
