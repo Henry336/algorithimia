@@ -17,6 +17,7 @@
 - Hardened Sorting Slime again so indirect built-in `sorted` bindings through default arguments, lambda arguments, or tuple indexing are rejected.
 - Added a GitHub Actions unit-test workflow for Python 3.11 pushes and pull requests.
 - Hardened the Python adapter preflight so imports, dunder introspection, and dynamic evaluation/introspection helpers are rejected before player code runs.
+- Added source-size and result-payload caps to the Python adapter to limit oversized local submissions and outputs.
 
 ## 0.1.0 - 2026-07-08
 

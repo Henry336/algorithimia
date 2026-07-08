@@ -127,6 +127,19 @@ class EngineTests(unittest.TestCase):
         with self.assertRaisesRegex(PythonExecutionError, "getattr is not available"):
             adapter.run("def solve(values):\n    return getattr(values, 'count')(1)\n", (1, 2, 3))
 
+    def test_adapter_rejects_oversized_source_before_execution(self) -> None:
+        adapter = PythonAdapter(max_source_chars=32)
+        source = "def solve(values):\n    return list(values)\n" + ("#" * 64)
+
+        with self.assertRaisesRegex(PythonExecutionError, "too large"):
+            adapter.run(source, (1, 2, 3))
+
+    def test_adapter_rejects_oversized_result_payload(self) -> None:
+        adapter = PythonAdapter(max_result_json_chars=64)
+
+        with self.assertRaisesRegex(PythonExecutionError, "player result is too large"):
+            adapter.run("def solve(values):\n    return list(range(100))\n", (1, 2, 3))
+
     def test_sorting_slime_rejects_wrong_solution(self) -> None:
         engine = GameEngine(PythonAdapter())
         result = engine.attempt(get_encounter("sorting_slime"), "def solve(values):\n    return list(values)\n")

@@ -32,8 +32,15 @@ _DISALLOWED_DYNAMIC_NAMES = {
 
 
 class PythonAdapter:
-    def __init__(self, timeout_seconds: float = 2.0) -> None:
+    def __init__(
+        self,
+        timeout_seconds: float = 2.0,
+        max_source_chars: int = 20_000,
+        max_result_json_chars: int = 20_000,
+    ) -> None:
         self._timeout_seconds = timeout_seconds
+        self._max_source_chars = max_source_chars
+        self._max_result_json_chars = max_result_json_chars
 
     def run(
         self,
@@ -41,13 +48,19 @@ class PythonAdapter:
         input_values: object,
         python_call_restrictions: tuple[PythonCallRestriction, ...] = (),
     ) -> object:
+        if len(source) > self._max_source_chars:
+            raise PythonExecutionError("player code is too large for this encounter")
+
         _reject_disallowed_python_syntax(source)
         _reject_disallowed_python_calls(source, python_call_restrictions)
 
         with tempfile.TemporaryDirectory(prefix="algorithimia_") as tmp:
             tmp_path = Path(tmp)
             runner = tmp_path / "runner.py"
-            runner.write_text(_runner_source(source, python_call_restrictions), encoding="utf-8")
+            runner.write_text(
+                _runner_source(source, python_call_restrictions, self._max_result_json_chars),
+                encoding="utf-8",
+            )
 
             try:
                 process = subprocess.run(
@@ -188,9 +201,14 @@ def _restricted_builtin_names(restrictions: tuple[PythonCallRestriction, ...]) -
     )
 
 
-def _runner_source(player_source: str, restrictions: tuple[PythonCallRestriction, ...]) -> str:
+def _runner_source(
+    player_source: str,
+    restrictions: tuple[PythonCallRestriction, ...],
+    max_result_json_chars: int,
+) -> str:
     encoded_source = json.dumps(player_source)
     restricted_builtin_names = json.dumps(_restricted_builtin_names(restrictions))
+    encoded_max_result_json_chars = json.dumps(max_result_json_chars)
     return f"""
 import json
 
@@ -222,7 +240,10 @@ try:
         raise TypeError("submission must define solve(values)")
     payload = json.loads(input())
     result = solve(tuple(payload["values"]))
-    print(json.dumps({{"ok": True, "result": result}}))
+    result_json = json.dumps({{"ok": True, "result": result}})
+    if len(result_json) > {encoded_max_result_json_chars}:
+        raise ValueError("player result is too large")
+    print(result_json)
 except BaseException as exc:
     print(json.dumps({{"ok": False, "error": f"{{type(exc).__name__}}: {{exc}}"}}))
 """.lstrip()

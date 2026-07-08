@@ -84,4 +84,4 @@ The `--trace-html` export writes a self-contained static HTML trace viewer that 
 
 ## Security Note
 
-Player Python runs in a child process with timeout, isolated mode, a minimal environment, restricted builtins, JSON-only I/O, and a syntax preflight that rejects imports, dunder introspection, and dynamic evaluation/introspection helpers. This is a baseline local safety model, not a complete sandbox for hostile untrusted code.
+Player Python runs in a child process with timeout, isolated mode, a minimal environment, restricted builtins, JSON-only I/O, source/result size caps, and a syntax preflight that rejects imports, dunder introspection, and dynamic evaluation/introspection helpers. This is a baseline local safety model, not a complete sandbox for hostile untrusted code.
