@@ -67,6 +67,7 @@ def solve(tickets):
 Each ticket is a JSON-compatible object with `id`, `arrival`, and `urgent`.
 Urgent tickets may advance, ties keep arrival order, and after two urgent services the oldest waiting ordinary ticket must be served if one exists.
 The CLI trace previews the starvation-guard case so players see arrivals, urgent overrides, stable ties, ordinary guard behavior, and served ticket ids before reading the case results.
+When a policy case fails, the counter now reports a compact debrief bark for the specific mistake: FIFO drift, buried urgency, broken stable ties, ordinary starvation, or ticket identity loss.
 
 ## Trace Metadata
 

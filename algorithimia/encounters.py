@@ -86,7 +86,17 @@ def _ticket(ticket_id: str, arrival: int, urgent: bool) -> dict[str, object]:
     return {"id": ticket_id, "arrival": arrival, "urgent": urgent}
 
 
-def _validate_ticket_ids(case: EncounterCase, actual: object) -> str | None:
+TRIAGE_POLICY_BARKS = {
+    "stable_ordinary_line": "Mira taps the counter strip: ordinary tickets still need first-in, first-out service.",
+    "urgent_override": "The alarm rune was buried. Urgent tickets may step ahead without erasing the line.",
+    "stable_urgent_ties": "The Dispatcher points to the timestamps: equal urgency still keeps arrival order.",
+    "ordinary_guard_after_two_urgent": (
+        "Mira marks the third alarm: after two urgent tickets, the oldest ordinary ticket needs a turn."
+    ),
+}
+
+
+def _validate_triage_line(case: EncounterCase, actual: object) -> str | None:
     if not isinstance(actual, (list, tuple)):
         return "Triage Line needs solve(tickets) to return a list of ticket ids."
 
@@ -98,6 +108,9 @@ def _validate_ticket_ids(case: EncounterCase, actual: object) -> str | None:
 
     if len(actual_ids) != len(known_ids) or len(set(actual_ids)) != len(actual_ids):
         return "Every issued ticket id must be served exactly once."
+
+    if tuple(actual_ids) != case.expected:
+        return TRIAGE_POLICY_BARKS.get(case.name, "The archived strip does not match the expected service policy.")
 
     return None
 
@@ -179,7 +192,7 @@ def solve(tickets):
 
     return served
 """,
-    output_validator=_validate_ticket_ids,
+    output_validator=_validate_triage_line,
     trace_case_name="ordinary_guard_after_two_urgent",
 )
 

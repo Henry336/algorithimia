@@ -127,6 +127,44 @@ def solve(tickets):
         self.assertFalse(result.passed)
         self.assertIn("Queueworks never issued", result.case_results[1].error or "")
 
+    def test_triage_line_reports_urgent_buried_bark(self) -> None:
+        engine = GameEngine(PythonAdapter())
+        result = engine.attempt(get_encounter("triage_line"), "def solve(tickets):\n    return [ticket['id'] for ticket in tickets]\n")
+
+        urgent_case = next(case for case in result.case_results if case.case_name == "urgent_override")
+        self.assertFalse(urgent_case.passed)
+        self.assertIn("alarm rune was buried", urgent_case.error or "")
+
+    def test_triage_line_reports_stable_tie_bark(self) -> None:
+        engine = GameEngine(PythonAdapter())
+        source = """
+def solve(tickets):
+    if len(tickets) == 3 and tickets[0]["urgent"] and tickets[1]["urgent"]:
+        return [tickets[1]["id"], tickets[0]["id"], tickets[2]["id"]]
+    waiting = sorted(tickets, key=lambda ticket: ticket["arrival"])
+    urgent = [ticket for ticket in waiting if ticket["urgent"]]
+    ordinary = [ticket for ticket in waiting if not ticket["urgent"]]
+    return [ticket["id"] for ticket in urgent + ordinary]
+"""
+        result = engine.attempt(get_encounter("triage_line"), source)
+
+        stable_tie_case = next(case for case in result.case_results if case.case_name == "stable_urgent_ties")
+        self.assertFalse(stable_tie_case.passed)
+        self.assertIn("equal urgency still keeps arrival order", stable_tie_case.error or "")
+
+    def test_triage_line_reports_ordinary_starved_bark(self) -> None:
+        engine = GameEngine(PythonAdapter())
+        source = """
+def solve(tickets):
+    waiting = sorted(tickets, key=lambda ticket: ticket["arrival"])
+    return [ticket["id"] for ticket in sorted(waiting, key=lambda ticket: (not ticket["urgent"], ticket["arrival"]))]
+"""
+        result = engine.attempt(get_encounter("triage_line"), source)
+
+        guard_case = next(case for case in result.case_results if case.case_name == "ordinary_guard_after_two_urgent")
+        self.assertFalse(guard_case.passed)
+        self.assertIn("after two urgent tickets", guard_case.error or "")
+
     def test_triage_line_trace_previews_starvation_guard_case(self) -> None:
         trace = encounter_trace(get_encounter("triage_line"))
 
