@@ -107,6 +107,22 @@ class GameShellTests(unittest.TestCase):
         self.assertIn("ROUTE OPEN", html)
         self.assertIn("Return to room", html)
 
+    def test_render_game_shell_includes_browser_smoke_harness(self) -> None:
+        html = render_game_shell()
+
+        self.assertIn("data-smoke-report", html)
+        self.assertIn("function runGameShellSmoke()", html)
+        self.assertIn("location.search.includes('smoke=1')", html)
+        self.assertIn("location.hash === '#smoke'", html)
+        self.assertIn("interact enabled beside slime", html)
+        self.assertIn("sorting panel active after interact", html)
+        self.assertIn("wrong return keeps intake jammed", html)
+        self.assertIn("visible spill clears after swaps", html)
+        self.assertIn("success return opens route", html)
+        self.assertIn("route status text updates", html)
+        self.assertIn("Game shell smoke: PASS", html)
+        self.assertIn("document.querySelector('[data-queueworks-room]').dataset.roomState === 'cleared_intake'", html)
+
     def test_render_game_shell_seals_certification_values(self) -> None:
         html = render_game_shell()
 
