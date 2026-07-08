@@ -48,6 +48,15 @@ class GameShellTests(unittest.TestCase):
         self.assertIn("Mira: Good. It works when the mess changes. That is a repair.", html)
         self.assertIn("swap ${first} with ${second}", html)
 
+    def test_render_game_shell_includes_sorting_action_icons(self) -> None:
+        html = render_game_shell()
+
+        self.assertIn("--sorting-actions: url(&quot;data:image/svg+xml;base64", html)
+        self.assertIn("class=\"action primary with-icon\"", html)
+        self.assertIn("data-action-icon=\"check_order\"", html)
+        self.assertIn("data-action-icon=\"reset_spill\"", html)
+        self.assertIn("data-action-icon=\"sealed_check\"", html)
+
     def test_render_game_shell_includes_explorable_queueworks_room(self) -> None:
         html = render_game_shell()
 
