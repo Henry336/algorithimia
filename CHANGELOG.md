@@ -34,6 +34,7 @@
 - Integrated Agent 5's browser-smoke QA/status icon sheet into the optional `?smoke=1` / `#smoke` report without changing normal play.
 - Expanded the optional browser self-smoke so it checks rendered visibility for room status, hint, retry, route-open, action-control, and smoke-report cues.
 - Strengthened the optional browser self-smoke so it dispatches Arrow/WASD keydown movement, checks on-screen movement reaches interact range, and confirms repaired interaction cannot reopen the cleared room.
+- Extended the optional browser self-smoke with horizontal-overflow checks, 40px control-target checks, cue text-fit checks, and smoke-report row readability checks across the room, Sorting Slime, retry, cleared, and report states.
 
 ## 0.1.0 - 2026-07-08
 

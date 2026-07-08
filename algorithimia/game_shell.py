@@ -1044,6 +1044,30 @@ def render_game_shell() -> str:
         record(name, rendered, icon);
         return element;
       }}
+      function viewportStable(name, icon = 'blocked_collision') {{
+        const width = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth);
+        record(name, width <= window.innerWidth + 1, icon);
+      }}
+      function tapTargets(selector, name, icon = 'click_interact') {{
+        const elements = Array.from(document.querySelectorAll(selector));
+        record(`found tap targets ${{selector}}`, elements.length > 0, icon);
+        const tooSmall = elements.filter((element) => {{
+          const rect = element.getBoundingClientRect();
+          return rect.width < 40 || rect.height < 40;
+        }});
+        record(name, tooSmall.length === 0, icon);
+      }}
+      function textFits(selector, name, icon = 'click_interact') {{
+        const element = document.querySelector(selector);
+        record(`found text surface ${{selector}}`, Boolean(element), icon);
+        record(name, element.scrollWidth <= element.clientWidth + 1 && element.scrollHeight <= element.clientHeight + 1, icon);
+      }}
+      function reportRowsReadable(name, icon = 'route_open_pass') {{
+        const rows = Array.from(document.querySelectorAll('[data-smoke-report] .smoke-row'));
+        record('found smoke report rows', rows.length > 0, icon);
+        const cramped = rows.filter((row) => row.getBoundingClientRect().height < 28);
+        record(name, cramped.length === 0, icon);
+      }}
       function smokeText(status, error) {{
         return [
           `Game shell smoke: ${{status.toUpperCase()}}`,
@@ -1085,6 +1109,9 @@ def render_game_shell() -> str:
       try {{
         readable('[data-room-status]', 'room status cue is visible before movement', 'blocked_collision');
         readable('[data-room-hint]', 'room hint cue is visible before movement', 'keyboard_move');
+        viewportStable('initial room has no horizontal overflow', 'blocked_collision');
+        tapTargets('[data-room-interact], [data-move], .tab', 'room controls meet 40px tap target', 'keyboard_move');
+        textFits('[data-room-status]', 'room status text fits before movement', 'blocked_collision');
         keyMove('ArrowRight', 2, 4);
         keyMove('d', 3, 4);
         click('[data-move="right"]');
@@ -1094,11 +1121,15 @@ def render_game_shell() -> str:
         record('interact enabled beside slime', !document.querySelector('[data-room-interact]').disabled, 'click_interact');
         click('[data-room-interact]');
         readable('[data-check-order]', 'sorting action controls are visible after interact', 'click_interact');
+        tapTargets('.rune, [data-check-order], [data-reset-order], [data-return-room]', 'sorting controls meet 40px tap target', 'click_interact');
+        viewportStable('sorting panel has no horizontal overflow', 'click_interact');
         record('sorting panel active after interact', document.querySelector('#panel-sorting_slime').classList.contains('active'), 'click_interact');
         click('[data-return-room]');
         record('wrong return keeps intake jammed', document.querySelector('[data-queueworks-room]').dataset.roomState === 'diagnostic_failed', 'retry_return');
         readable('[data-room-retry-panel]', 'retry panel is visible after wrong return', 'retry_return');
         readable('[data-room-hint]', 'retry hint cue is visible after wrong return', 'retry_return');
+        textFits('[data-room-hint]', 'retry hint text fits after wrong return', 'retry_return');
+        viewportStable('retry room has no horizontal overflow', 'retry_return');
         click('[data-rune-index="0"]');
         click('[data-rune-index="1"]');
         click('[data-rune-index="1"]');
@@ -1112,6 +1143,8 @@ def render_game_shell() -> str:
         record('route status text updates', document.querySelector('[data-room-status]').textContent === 'ROUTE OPEN', 'route_open_pass');
         readable('[data-room-status]', 'route-open status cue is visible after success', 'route_open_pass');
         readable('[data-room-hint]', 'route-open hint cue is visible after success', 'route_open_pass');
+        textFits('[data-room-hint]', 'route-open hint text fits after success', 'route_open_pass');
+        viewportStable('cleared room has no horizontal overflow', 'route_open_pass');
         record('interact disabled after repair', document.querySelector('[data-room-interact]').disabled, 'route_open_pass');
         click('[data-room-interact]');
         record('repaired interaction leaves route open', document.querySelector('[data-queueworks-room]').dataset.roomState === 'cleared_intake', 'route_open_pass');
@@ -1123,6 +1156,8 @@ def render_game_shell() -> str:
         record('cleared route blocker becomes passable', playerGridPosition().x === '8', 'blocked_collision');
         renderSmokeReport('pass');
         readable('[data-smoke-report]', 'smoke report is visible after completion', 'route_open_pass');
+        reportRowsReadable('smoke report rows keep readable height', 'route_open_pass');
+        viewportStable('smoke report has no horizontal overflow', 'route_open_pass');
         renderSmokeReport('pass');
       }} catch (error) {{
         renderSmokeReport('fail', error);
