@@ -28,6 +28,7 @@
 - Wired Agent 5's Queueworks room feedback sheet and retry strip into the browser shell, then added wrong-order return-to-room retry feedback so failed repairs keep the intake visibly jammed.
 - Added basic blocked-tile collision to the Queueworks room and made the jammed route blockers clear after a successful Sorting Slime repair.
 - Added simple blocked tiles and collision feedback to the Queueworks room so the Patchrunner navigates around the Sorting Slime, jammed gate, and ledger clutter instead of walking through them.
+- Integrated Agent 5's Sorting Slime action icon sheet into the browser repair controls and sealed-check reminder.
 
 ## 0.1.0 - 2026-07-08
 

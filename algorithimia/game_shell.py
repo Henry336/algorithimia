@@ -14,6 +14,7 @@ CERTIFICATION_SHEET = ASSET_DIR / "sorting-certification-markers.svg"
 SORTING_SLIME_SPRITE = ASSET_DIR / "sorting-slime.svg"
 QUEUE_GATE_SPRITE = ASSET_DIR / "queue-intake-gate.svg"
 SORTING_SLIME_SCENE_STRIP = ASSET_DIR / "sorting-slime-scene-strip.svg"
+SORTING_ACTION_ICONS = ASSET_DIR / "sorting-action-icons.svg"
 QUEUEWORKS_ROOM_SHEET = ASSET_DIR / "queueworks-room-sheet.svg"
 QUEUEWORKS_ROOM_FEEDBACK_SHEET = ASSET_DIR / "queueworks-room-feedback.svg"
 QUEUEWORKS_ROOM_RETRY_SHEET = ASSET_DIR / "queueworks-room-retry-strip.svg"
@@ -48,6 +49,7 @@ def render_game_shell() -> str:
     sorting_slime_uri = _svg_data_uri(SORTING_SLIME_SPRITE)
     queue_gate_uri = _svg_data_uri(QUEUE_GATE_SPRITE)
     sorting_scene_uri = _svg_data_uri(SORTING_SLIME_SCENE_STRIP)
+    sorting_action_uri = _svg_data_uri(SORTING_ACTION_ICONS)
     room_sheet_uri = _svg_data_uri(QUEUEWORKS_ROOM_SHEET)
     room_feedback_uri = _svg_data_uri(QUEUEWORKS_ROOM_FEEDBACK_SHEET)
     room_retry_uri = _svg_data_uri(QUEUEWORKS_ROOM_RETRY_SHEET)
@@ -63,6 +65,7 @@ def render_game_shell() -> str:
             sorting_slime_uri,
             queue_gate_uri,
             sorting_scene_uri,
+            sorting_action_uri,
         )
         for index, encounter in enumerate(encounters)
     )
@@ -509,6 +512,25 @@ def render_game_shell() -> str:
       border-color: var(--green);
       color: var(--green);
     }}
+    .action.with-icon {{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }}
+    .action-icon {{
+      width: 24px;
+      height: 24px;
+      background-image: var(--sorting-actions);
+      background-repeat: no-repeat;
+      background-size: auto 24px;
+      image-rendering: pixelated;
+      flex: 0 0 auto;
+    }}
+    .action-icon[data-action-icon="select_rune"] {{ background-position: 0 0; }}
+    .action-icon[data-action-icon="swap_runes"] {{ background-position: -24px 0; }}
+    .action-icon[data-action-icon="check_order"] {{ background-position: -48px 0; }}
+    .action-icon[data-action-icon="reset_spill"] {{ background-position: -72px 0; }}
+    .action-icon[data-action-icon="sealed_check"] {{ background-position: -96px 0; }}
     .mira {{
       border-left: 5px solid var(--green);
       background: var(--surface);
@@ -901,6 +923,7 @@ def _encounter_panel(
     sorting_slime_uri: str,
     queue_gate_uri: str,
     sorting_scene_uri: str,
+    sorting_action_uri: str,
 ) -> str:
     active = " active" if index == 0 else ""
     badge_cell = BADGE_CELLS.get(encounter.slug, 0)
@@ -909,7 +932,7 @@ def _encounter_panel(
     encounter_flag = "" if encounter.slug == "sorting_slime" else f" --encounter {encounter.slug}"
     trace_path = "build\\game-trace.html" if encounter.slug == "sorting_slime" else f"build\\{encounter.slug}-trace.html"
     playable_slice = (
-        _sorting_slime_playable_slice(sorting_slime_uri, queue_gate_uri, sorting_scene_uri)
+        _sorting_slime_playable_slice(sorting_slime_uri, queue_gate_uri, sorting_scene_uri, sorting_action_uri)
         if encounter.slug == "sorting_slime"
         else ""
     )
@@ -945,8 +968,9 @@ def _sorting_slime_playable_slice(
     sorting_slime_uri: str,
     queue_gate_uri: str,
     sorting_scene_uri: str,
+    sorting_action_uri: str,
 ) -> str:
-    return f"""        <div class="slice" data-sorting-slime-playfield data-values="5,1,4,2" data-state="inspect">
+    return f"""        <div class="slice" data-sorting-slime-playfield data-values="5,1,4,2" data-state="inspect" style="--sorting-actions: url(&quot;{sorting_action_uri}&quot;)">
           <h3>Blocked Queueworks Intake</h3>
           <img class="scene-strip" src="{sorting_scene_uri}" alt="Sorting Slime scene strip">
           <div class="scene" aria-label="Sorting Slime ordering scene">
@@ -969,11 +993,11 @@ def _sorting_slime_playable_slice(
             <div class="inspection-mark" data-inspection-mark></div>
           </div>
           <div class="controls" aria-label="Sorting Slime actions">
-            <button class="action primary" type="button" data-check-order>Check order</button>
-            <button class="action" type="button" data-reset-order>Reset spill</button>
+            <button class="action primary with-icon" type="button" data-check-order><span class="action-icon" data-action-icon="check_order" aria-hidden="true"></span><span>Check order</span></button>
+            <button class="action with-icon" type="button" data-reset-order><span class="action-icon" data-action-icon="reset_spill" aria-hidden="true"></span><span>Reset spill</span></button>
             <button class="action" type="button" data-return-room>Return to room</button>
           </div>
-          <div class="cert-row"><span class="feedback-icon" data-icon="sealed_check_ready" aria-hidden="true"></span><span>sealed check stays hidden until the local Python adapter validates the repair</span></div>
+          <div class="cert-row"><span class="action-icon" data-action-icon="sealed_check" aria-hidden="true"></span><span>sealed check stays hidden until the local Python adapter validates the repair</span></div>
           <p class="mira" data-feedback>Mira: Public spill loaded. Put the runes in smallest-to-largest order.</p>
           <div class="repair-log" data-repair-log>spill loaded: 5, 1, 4, 2</div>
         </div>"""
