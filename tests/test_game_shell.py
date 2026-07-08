@@ -17,6 +17,21 @@ class GameShellTests(unittest.TestCase):
         self.assertIn("python -m algorithimia --encounter triage_line", html)
         self.assertIn("ordinary guard: A served after two urgent", html)
 
+    def test_render_game_shell_includes_playable_sorting_slime_slice(self) -> None:
+        html = render_game_shell()
+
+        self.assertIn("data-sorting-slime-playfield", html)
+        self.assertIn("data-values=\"5,1,4,2\"", html)
+        self.assertIn("Blocked Queueworks Intake", html)
+        self.assertIn("Sorting Slime scene strip", html)
+        self.assertIn("Jammed Queueworks intake gate", html)
+        self.assertIn("Loose rune tokens", html)
+        self.assertIn("Check order", html)
+        self.assertIn("Reset spill", html)
+        self.assertIn("Mira: Public spill loaded", html)
+        self.assertIn("Mira: Good. It works when the mess changes. That is a repair.", html)
+        self.assertIn("swap ${first} with ${second}", html)
+
     def test_render_game_shell_seals_certification_values(self) -> None:
         html = render_game_shell()
 

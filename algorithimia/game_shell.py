@@ -11,6 +11,9 @@ ASSET_DIR = Path(__file__).parent / "assets" / "phase1"
 BADGE_SHEET = ASSET_DIR / "encounter-badges.svg"
 EVENT_SHEET = ASSET_DIR / "trace-event-kinds.svg"
 CERTIFICATION_SHEET = ASSET_DIR / "sorting-certification-markers.svg"
+SORTING_SLIME_SPRITE = ASSET_DIR / "sorting-slime.svg"
+QUEUE_GATE_SPRITE = ASSET_DIR / "queue-intake-gate.svg"
+SORTING_SLIME_SCENE_STRIP = ASSET_DIR / "sorting-slime-scene-strip.svg"
 
 BADGE_CELLS = {
     "sorting_slime": 0,
@@ -39,10 +42,22 @@ def render_game_shell() -> str:
     badge_sheet_uri = _svg_data_uri(BADGE_SHEET)
     event_sheet_uri = _svg_data_uri(EVENT_SHEET)
     certification_sheet_uri = _svg_data_uri(CERTIFICATION_SHEET)
+    sorting_slime_uri = _svg_data_uri(SORTING_SLIME_SPRITE)
+    queue_gate_uri = _svg_data_uri(QUEUE_GATE_SPRITE)
+    sorting_scene_uri = _svg_data_uri(SORTING_SLIME_SCENE_STRIP)
     encounters = tuple(ENCOUNTERS.values())
     tabs = "\n".join(_tab_button(encounter, index) for index, encounter in enumerate(encounters))
     panels = "\n".join(
-        _encounter_panel(encounter, index, badge_sheet_uri, event_sheet_uri, certification_sheet_uri)
+        _encounter_panel(
+            encounter,
+            index,
+            badge_sheet_uri,
+            event_sheet_uri,
+            certification_sheet_uri,
+            sorting_slime_uri,
+            queue_gate_uri,
+            sorting_scene_uri,
+        )
         for index, encounter in enumerate(encounters)
     )
 
@@ -178,6 +193,86 @@ def render_game_shell() -> str:
       padding: 10px;
       background: var(--surface);
     }}
+    .slice {{
+      border: 1px solid var(--line);
+      background: #111923;
+      display: grid;
+      gap: 12px;
+      padding: 12px;
+    }}
+    .scene {{
+      min-height: 170px;
+      display: grid;
+      grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.2fr) minmax(120px, 0.8fr);
+      gap: 12px;
+      align-items: end;
+      background: linear-gradient(#172231, #0c121a);
+      border: 1px solid var(--line);
+      padding: 14px;
+      overflow: hidden;
+    }}
+    .sprite {{
+      width: min(96px, 100%);
+      image-rendering: pixelated;
+      justify-self: center;
+      filter: drop-shadow(0 10px 0 rgba(0, 0, 0, 0.25));
+    }}
+    .scene-strip {{
+      width: min(384px, 100%);
+      image-rendering: pixelated;
+      justify-self: center;
+      background: var(--ink);
+      border: 1px solid var(--line);
+      padding: 6px;
+    }}
+    .token-row {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(44px, 1fr));
+      gap: 8px;
+      align-self: center;
+    }}
+    .rune {{
+      min-height: 54px;
+      border: 2px solid var(--line);
+      background: #253144;
+      color: var(--text);
+      cursor: pointer;
+      font: 700 1.15rem/1 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    }}
+    .rune[aria-pressed="true"] {{
+      border-color: var(--gold);
+      box-shadow: inset 0 0 0 2px var(--gold);
+    }}
+    .controls {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }}
+    .action {{
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      min-height: 40px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font: inherit;
+    }}
+    .action.primary {{
+      border-color: var(--green);
+      color: var(--green);
+    }}
+    .mira {{
+      border-left: 5px solid var(--green);
+      background: var(--surface);
+      padding: 10px;
+      color: var(--text);
+    }}
+    .repair-log {{
+      min-height: 44px;
+      color: var(--muted);
+      font: 0.9rem/1.35 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      overflow-wrap: anywhere;
+    }}
     .trace {{
       display: grid;
       gap: 8px;
@@ -226,6 +321,9 @@ def render_game_shell() -> str:
         display: grid;
         grid-template-columns: 1fr;
       }}
+      .scene {{
+        grid-template-columns: 1fr;
+      }}
     }}
   </style>
 </head>
@@ -248,6 +346,69 @@ def render_game_shell() -> str:
       panels.forEach((panel) => panel.classList.toggle('active', panel.id === tab.getAttribute('aria-controls')));
     }}
     tabs.forEach((tab) => tab.addEventListener('click', () => selectTab(tab)));
+
+    const sortingGame = document.querySelector('[data-sorting-slime-playfield]');
+    if (sortingGame) {{
+      const initialValues = sortingGame.dataset.values.split(',').map(Number);
+      const buttons = Array.from(sortingGame.querySelectorAll('[data-rune-index]'));
+      const feedback = sortingGame.querySelector('[data-feedback]');
+      const repairLog = sortingGame.querySelector('[data-repair-log]');
+      let values = initialValues.slice();
+      let selectedIndex = null;
+      let swaps = 0;
+
+      function isOrdered() {{
+        return values.every((value, index) => index === 0 || values[index - 1] <= value);
+      }}
+
+      function renderRunes() {{
+        buttons.forEach((button, index) => {{
+          button.textContent = String(values[index]);
+          button.setAttribute('aria-pressed', String(index === selectedIndex));
+        }});
+      }}
+
+      function setFeedback(message) {{
+        feedback.textContent = message;
+      }}
+
+      buttons.forEach((button, index) => {{
+        button.addEventListener('click', () => {{
+          if (selectedIndex === null) {{
+            selectedIndex = index;
+            repairLog.textContent = `selected rune ${{values[index]}}`;
+          }} else if (selectedIndex === index) {{
+            selectedIndex = null;
+            repairLog.textContent = 'selection cleared';
+          }} else {{
+            const first = values[selectedIndex];
+            const second = values[index];
+            [values[selectedIndex], values[index]] = [values[index], values[selectedIndex]];
+            swaps += 1;
+            repairLog.textContent = `swap ${{first}} with ${{second}}`;
+            selectedIndex = null;
+            setFeedback(isOrdered() ? 'Mira: Good. It works when the mess changes. That is a repair.' : 'Mira: Keep inspecting. The intake still reads out of order.');
+          }}
+          renderRunes();
+        }});
+      }});
+
+      sortingGame.querySelector('[data-check-order]').addEventListener('click', () => {{
+        setFeedback(isOrdered() ? 'Mira: Good. It works when the mess changes. That is a repair.' : 'Mira: The gate still sees a larger rune before a smaller one.');
+        repairLog.textContent = `checked after ${{swaps}} swap${{swaps === 1 ? '' : 's'}}`;
+      }});
+
+      sortingGame.querySelector('[data-reset-order]').addEventListener('click', () => {{
+        values = initialValues.slice();
+        selectedIndex = null;
+        swaps = 0;
+        setFeedback('Mira: Public spill loaded. Put the runes in smallest-to-largest order.');
+        repairLog.textContent = 'spill reset: 5, 1, 4, 2';
+        renderRunes();
+      }});
+
+      renderRunes();
+    }}
   </script>
 </body>
 </html>
@@ -269,6 +430,9 @@ def _encounter_panel(
     badge_sheet_uri: str,
     event_sheet_uri: str,
     certification_sheet_uri: str,
+    sorting_slime_uri: str,
+    queue_gate_uri: str,
+    sorting_scene_uri: str,
 ) -> str:
     active = " active" if index == 0 else ""
     badge_cell = BADGE_CELLS.get(encounter.slug, 0)
@@ -276,6 +440,11 @@ def _encounter_panel(
     certification = _certification_block(encounter, certification_sheet_uri)
     encounter_flag = "" if encounter.slug == "sorting_slime" else f" --encounter {encounter.slug}"
     trace_path = "build\\game-trace.html" if encounter.slug == "sorting_slime" else f"build\\{encounter.slug}-trace.html"
+    playable_slice = (
+        _sorting_slime_playable_slice(sorting_slime_uri, queue_gate_uri, sorting_scene_uri)
+        if encounter.slug == "sorting_slime"
+        else ""
+    )
 
     return f"""    <section class="panel{active}" id="panel-{html.escape(encounter.slug)}" role="tabpanel" aria-labelledby="tab-{html.escape(encounter.slug)}">
       <div class="section">
@@ -287,6 +456,7 @@ def _encounter_panel(
           </div>
         </div>
         <p class="prompt">{html.escape(encounter.prompt)}</p>
+{playable_slice}
 {certification}
         <div>
           <h3>Run locally</h3>
@@ -301,6 +471,33 @@ def _encounter_panel(
         </div>
       </div>
     </section>"""
+
+
+def _sorting_slime_playable_slice(
+    sorting_slime_uri: str,
+    queue_gate_uri: str,
+    sorting_scene_uri: str,
+) -> str:
+    return f"""        <div class="slice" data-sorting-slime-playfield data-values="5,1,4,2">
+          <h3>Blocked Queueworks Intake</h3>
+          <img class="scene-strip" src="{sorting_scene_uri}" alt="Sorting Slime scene strip">
+          <div class="scene" aria-label="Sorting Slime ordering scene">
+            <img class="sprite" src="{queue_gate_uri}" alt="Jammed Queueworks intake gate">
+            <div class="token-row" aria-label="Loose rune tokens">
+              <button class="rune" type="button" data-rune-index="0" aria-pressed="false"></button>
+              <button class="rune" type="button" data-rune-index="1" aria-pressed="false"></button>
+              <button class="rune" type="button" data-rune-index="2" aria-pressed="false"></button>
+              <button class="rune" type="button" data-rune-index="3" aria-pressed="false"></button>
+            </div>
+            <img class="sprite" src="{sorting_slime_uri}" alt="Sorting Slime">
+          </div>
+          <div class="controls" aria-label="Sorting Slime actions">
+            <button class="action primary" type="button" data-check-order>Check order</button>
+            <button class="action" type="button" data-reset-order>Reset spill</button>
+          </div>
+          <p class="mira" data-feedback>Mira: Public spill loaded. Put the runes in smallest-to-largest order.</p>
+          <div class="repair-log" data-repair-log>spill loaded: 5, 1, 4, 2</div>
+        </div>"""
 
 
 def _event_row(event: TraceEvent, sheet_uri: str) -> str:

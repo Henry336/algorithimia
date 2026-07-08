@@ -1,6 +1,6 @@
 # Algorithimia
 
-Algorithimia is a DSA programming RPG. The current build is a terminal-first prototype with two Python encounters.
+Algorithimia is a DSA programming RPG. The current build has two Python encounter prototypes and a self-contained browser shell with a playable Sorting Slime ordering slice.
 
 ## Run
 
@@ -90,6 +90,8 @@ When a policy case fails, the counter now reports a compact debrief bark for the
 The terminal trace text is generated from structured trace events. Future renderers can consume event kinds such as `comparison`, `arrival`, `urgent_override`, `stable_tie`, `ordinary_guard`, and `served` without parsing player-facing strings.
 The `--trace-html` export writes a self-contained static HTML trace viewer that embeds the current Phase 1 encounter badge, trace-event icon sheets, and sealed-certification marker sheet when the encounter uses hidden certification cases.
 The `--game-html` export writes a self-contained static browser shell with tabbed encounter selection, encounter prompts, run/export commands, trace previews, and sealed-certification status. It does not execute player Python in the browser; code execution still stays in the local CLI runner.
+
+The Sorting Slime tab now includes a browser-playable Queueworks intake scene. Click rune tokens to select and swap them, then use the check/reset buttons to test the visible spill. The slice embeds the current Phase 1 Sorting Slime scene strip, Sorting Slime sprite, and Queue Intake Gate placeholder sprite, shows Mira feedback, and keeps hidden certification data sealed.
 
 ## Security Note
 
