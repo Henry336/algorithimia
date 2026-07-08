@@ -244,6 +244,23 @@ def render_game_shell() -> str:
       border-top: 1px solid rgba(248, 250, 252, 0.08);
       pointer-events: none;
     }}
+    .room-blocker {{
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      transform: translate(calc(var(--x) * 48px), calc(var(--y) * 48px));
+      border: 1px solid rgba(248, 193, 74, 0.28);
+      background:
+        linear-gradient(135deg, rgba(248, 193, 74, 0.2) 25%, transparent 25%),
+        linear-gradient(225deg, rgba(248, 193, 74, 0.2) 25%, transparent 25%),
+        rgba(11, 16, 23, 0.42);
+      background-size: 12px 12px;
+      image-rendering: pixelated;
+      z-index: 1;
+    }}
+    .room-shell[data-room-state="cleared_intake"] .room-blocker[data-route-blocker] {{
+      display: none;
+    }}
     .room-actor {{
       position: absolute;
       width: 48px;
@@ -271,6 +288,10 @@ def render_game_shell() -> str:
     .room-gate {{
       width: 88px;
       height: 88px;
+    }}
+    .room-shell[data-room-state="cleared_intake"] .room-gate {{
+      opacity: 0.48;
+      filter: drop-shadow(0 8px 0 rgba(0, 0, 0, 0.25)) saturate(0.65);
     }}
     .room-marker {{
       position: absolute;
@@ -579,6 +600,8 @@ def render_game_shell() -> str:
         </div>
       </div>
       <div class="room-stage" aria-label="Explorable Queueworks room">
+        <div class="room-blocker" data-blocked-tile="ledger stack" style="--x: 3; --y: 1" aria-label="Blocked ledger stack tile"></div>
+        <div class="room-blocker" data-blocked-tile="jammed gate base" data-route-blocker style="--x: 8; --y: 4" aria-label="Blocked jammed gate tile"></div>
         <div class="room-actor player-sprite" data-player style="--x: 1; --y: 4" aria-label="Patchrunner player sprite"></div>
         <img class="room-actor room-sprite room-gate" data-room-gate src="{queue_gate_uri}" alt="Queueworks intake gate" style="--x: 8; --y: 3">
         <img class="room-actor room-sprite" data-room-slime src="{sorting_slime_uri}" alt="Interactable Sorting Slime" style="--x: 5; --y: 3">
@@ -626,11 +649,24 @@ def render_game_shell() -> str:
       const roomStateIcon = room.querySelector('[data-room-state-icon]');
       const slime = {{ x: 5, y: 3 }};
       const bounds = {{ width: 10, height: 6 }};
+      const blockedTiles = [
+        {{ x: slime.x, y: slime.y, label: 'Sorting Slime' }},
+        {{ x: 8, y: 3, label: 'jammed intake gate', opensWhenClear: true }},
+        {{ x: 8, y: 4, label: 'jammed gate base', opensWhenClear: true }},
+        {{ x: 3, y: 1, label: 'ledger stack' }},
+      ];
       let playerPosition = {{ x: 1, y: 4 }};
       let roomState = 'jammed_intake';
 
       function isNearSlime() {{
         return Math.abs(playerPosition.x - slime.x) + Math.abs(playerPosition.y - slime.y) <= 1;
+      }}
+
+      function blockedTileAt(position) {{
+        return blockedTiles.find((tile) => {{
+          if (roomState === 'cleared_intake' && tile.opensWhenClear) return false;
+          return tile.x === position.x && tile.y === position.y;
+        }});
       }}
 
       function renderRoom() {{
@@ -654,10 +690,17 @@ def render_game_shell() -> str:
       }}
 
       function movePlayer(dx, dy) {{
-        playerPosition = {{
+        const nextPosition = {{
           x: Math.max(0, Math.min(bounds.width - 1, playerPosition.x + dx)),
           y: Math.max(0, Math.min(bounds.height - 1, playerPosition.y + dy)),
         }};
+        const blocker = blockedTileAt(nextPosition);
+        if (blocker) {{
+          roomLog.textContent = `Blocked by ${{blocker.label}}. Move beside it and interact from there.`;
+          renderRoom();
+          return;
+        }}
+        playerPosition = nextPosition;
         if (roomState === 'diagnostic_failed' && !isNearSlime()) {{
           roomLog.textContent = 'The stair is still jammed. Return to the slime and retry the visible spill.';
         }} else {{

@@ -26,6 +26,7 @@
 - Added visible jammed/cleared route status and adjacent inspection marks to the browser-playable Sorting Slime slice.
 - Added a tiny explorable Queueworks room to the browser game shell with player movement, an interactable Sorting Slime, Agent 5's room-sheet Patchrunner/prompt art, encounter transition, success return, and route-open room feedback.
 - Wired Agent 5's Queueworks room feedback sheet and retry strip into the browser shell, then added wrong-order return-to-room retry feedback so failed repairs keep the intake visibly jammed.
+- Added simple blocked tiles and collision feedback to the Queueworks room so the Patchrunner navigates around the Sorting Slime, jammed gate, and ledger clutter instead of walking through them.
 
 ## 0.1.0 - 2026-07-08
 
