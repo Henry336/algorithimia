@@ -383,6 +383,28 @@ def render_game_shell() -> str:
       color: var(--text);
       font-weight: 700;
     }}
+    .smoke-evidence {{
+      display: grid;
+      gap: 4px;
+      margin: 0;
+      padding: 8px;
+      border: 1px solid var(--line);
+      background: rgba(12, 18, 26, 0.72);
+    }}
+    .smoke-evidence-row {{
+      display: grid;
+      grid-template-columns: minmax(120px, 0.34fr) minmax(0, 0.66fr);
+      gap: 8px;
+      min-height: 28px;
+      align-items: start;
+    }}
+    .smoke-evidence-row dt {{
+      color: var(--text);
+      font-weight: 700;
+    }}
+    .smoke-evidence-row dd {{
+      margin: 0;
+    }}
     .smoke-list {{
       display: grid;
       gap: 6px;
@@ -1068,9 +1090,26 @@ def render_game_shell() -> str:
         const cramped = rows.filter((row) => row.getBoundingClientRect().height < 28);
         record(name, cramped.length === 0, icon);
       }}
+      function smokeEvidence(status, error) {{
+        const failed = checks.find((check) => !check.passed);
+        const failureLabel = failed ? failed.name : String(error || 'unknown failure');
+        const passed = status === 'pass';
+        return [
+          {{ label: 'State tested', value: 'blocked route, interact-ready slime, wrong-order retry, route clear, repaired interaction, smoke report' }},
+          {{ label: 'Result', value: passed ? 'pass' : `fail with label: ${{failureLabel}}` }},
+          {{ label: 'Control path', value: 'ArrowRight, WASD, on-screen movement, Interact, Return, rune swaps, Check order' }},
+          {{ label: 'Viewport', value: `${{window.innerWidth}}x${{window.innerHeight}}` }},
+          {{ label: 'Observed cause', value: passed ? 'self-smoke checks passed in this browser viewport' : failureLabel }},
+          {{ label: 'Text/icon/collision agreement', value: passed ? 'cue text, smoke icons, blocked collision, and route clearing agreed' : 'review failed row against cue text, smoke icon, collision, or route state' }},
+          {{ label: 'Likely owner', value: passed ? 'Agent 4 or Henry for live readability judgment' : 'Agent 3 if this is placement, timing, state pairing, button, or layout' }},
+          {{ label: 'Next action', value: passed ? 'manual browser readability pass or same-room polish only' : 'fix the labeled same-room failure before new content' }},
+        ];
+      }}
       function smokeText(status, error) {{
+        const evidence = smokeEvidence(status, error).map((item) => `${{item.label}}: ${{item.value}}`);
         return [
           `Game shell smoke: ${{status.toUpperCase()}}`,
+          ...evidence,
           ...checks.map((check) => `${{check.passed ? 'PASS' : 'FAIL'}} ${{check.name}}`),
           ...(error ? [String(error)] : []),
         ].join('\\n');
@@ -1085,6 +1124,21 @@ def render_game_shell() -> str:
         summary.className = 'smoke-summary';
         summary.innerHTML = `<span class="smoke-icon" data-smoke-icon="${{summaryIcon}}" aria-hidden="true"></span><span>Game shell smoke: ${{status.toUpperCase()}}</span>`;
         report.append(summary);
+
+        const evidence = document.createElement('dl');
+        evidence.className = 'smoke-evidence';
+        evidence.setAttribute('aria-label', 'Browser evidence intake card');
+        smokeEvidence(status, error).forEach((item) => {{
+          const row = document.createElement('div');
+          row.className = 'smoke-evidence-row';
+          const term = document.createElement('dt');
+          term.textContent = item.label;
+          const detail = document.createElement('dd');
+          detail.textContent = item.value;
+          row.append(term, detail);
+          evidence.append(row);
+        }});
+        report.append(evidence);
 
         const list = document.createElement('ul');
         list.className = 'smoke-list';
