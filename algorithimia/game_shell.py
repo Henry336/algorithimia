@@ -184,6 +184,7 @@ def render_game_shell() -> str:
       align-items: center;
       gap: 8px;
       white-space: nowrap;
+      flex: 0 0 auto;
     }}
     .feedback-icon {{
       width: 24px;
@@ -378,6 +379,9 @@ def render_game_shell() -> str:
       gap: 8px;
       color: var(--muted);
       font: 0.88rem/1.25 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      flex: 1 1 220px;
+      min-width: 0;
+      overflow-wrap: anywhere;
     }}
     .encounter-title {{
       display: flex;
@@ -611,6 +615,16 @@ def render_game_shell() -> str:
       .topbar {{
         display: grid;
       }}
+      .room-header {{
+        display: grid;
+      }}
+      .room-state {{
+        justify-content: start;
+        white-space: normal;
+      }}
+      .room-stage {{
+        min-height: 288px;
+      }}
       .status {{
         white-space: normal;
       }}
@@ -664,7 +678,7 @@ def render_game_shell() -> str:
           <button class="action move-right" type="button" data-move="right" aria-label="Move right">Right</button>
         </div>
         <button class="action primary" type="button" data-room-interact disabled>Interact</button>
-        <div class="room-hint"><span class="feedback-icon" data-icon="move_hint" aria-hidden="true"></span><span>move close, then test the repair</span></div>
+        <div class="room-hint"><span class="feedback-icon" data-icon="move_hint" aria-hidden="true"></span><span data-room-hint>move close, then test the repair</span></div>
         <div class="room-log" data-room-log>Use arrow keys, WASD, or the buttons to reach the Sorting Slime.</div>
       </div>
       <pre class="smoke-report" data-smoke-report aria-live="polite"></pre>
@@ -690,6 +704,7 @@ def render_game_shell() -> str:
       const roomLog = room.querySelector('[data-room-log]');
       const roomStatus = room.querySelector('[data-room-status]');
       const roomStateIcon = room.querySelector('[data-room-state-icon]');
+      const roomHint = room.querySelector('[data-room-hint]');
       const slime = {{ x: 5, y: 3 }};
       const bounds = {{ width: 10, height: 6 }};
       const blockedTiles = [
@@ -715,20 +730,30 @@ def render_game_shell() -> str:
       function renderRoom() {{
         player.style.setProperty('--x', String(playerPosition.x));
         player.style.setProperty('--y', String(playerPosition.y));
-        interact.disabled = !isNearSlime();
+        interact.disabled = !isNearSlime() || roomState === 'cleared_intake';
         room.dataset.roomState = roomState;
         if (roomState === 'cleared_intake') {{
           roomStatus.textContent = 'ROUTE OPEN';
           roomStateIcon.dataset.icon = 'route_open';
+          roomHint.textContent = 'Route clear. The stair will let you through.';
+          interact.textContent = 'Repaired';
         }} else if (roomState === 'diagnostic_failed') {{
           roomStatus.textContent = 'RETRY REPAIR';
           roomStateIcon.dataset.icon = 'repair_failed';
+          roomHint.textContent = 'One rune is still out of order. Try the repair again?';
+          interact.textContent = 'Retry repair';
         }} else if (roomState === 'sealed_check') {{
           roomStatus.textContent = 'SEALED CHECK';
           roomStateIcon.dataset.icon = 'sealed_check_ready';
+          roomHint.textContent = 'The visible spill held, but the Archive did not trust the repair yet.';
+          interact.textContent = 'Retry repair';
         }} else {{
           roomStatus.textContent = isNearSlime() ? 'SLIME READY' : 'ROUTE JAMMED';
           roomStateIcon.dataset.icon = isNearSlime() ? 'interact_ready' : 'move_hint';
+          roomHint.textContent = isNearSlime()
+            ? 'Sort the runes and test the repair?'
+            : 'move close, then test the repair';
+          interact.textContent = 'Interact';
         }}
       }}
 
@@ -739,7 +764,10 @@ def render_game_shell() -> str:
         }};
         const blocker = blockedTileAt(nextPosition);
         if (blocker) {{
-          roomLog.textContent = `Blocked by ${{blocker.label}}. Move beside it and interact from there.`;
+          const blockCue = blocker.opensWhenClear
+            ? 'The gate holds. The slime still owns this route.'
+            : `Blocked by ${{blocker.label}}. Move beside it and interact from there.`;
+          roomLog.textContent = blockCue;
           renderRoom();
           return;
         }}
@@ -787,6 +815,11 @@ def render_game_shell() -> str:
 
       interact.addEventListener('click', () => {{
         if (!isNearSlime()) return;
+        if (roomState === 'cleared_intake') {{
+          roomLog.textContent = 'Route clear. The stair will let you through.';
+          renderRoom();
+          return;
+        }}
         roomState = 'repair_in_progress';
         selectTab(document.querySelector('#tab-sorting_slime'));
         document.querySelector('#panel-sorting_slime').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
@@ -797,13 +830,13 @@ def render_game_shell() -> str:
       window.algorithimiaRoom = {{
         markSortingSlimeCleared() {{
           roomState = 'cleared_intake';
-          roomLog.textContent = 'The route opens. The Patchrunner returns to the Queueworks room.';
+          roomLog.textContent = 'Route clear. The stair will let you through.';
           renderRoom();
           room.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
         }},
         markSortingSlimeFailed() {{
           roomState = 'diagnostic_failed';
-          roomLog.textContent = 'The stair is still jammed. Try the visible spill again before trusting the route.';
+          roomLog.textContent = 'One rune is still out of order. Try the repair again?';
           renderRoom();
           room.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
         }},
@@ -957,6 +990,13 @@ def render_game_shell() -> str:
         click('[data-return-room]');
         record('success return opens route', document.querySelector('[data-queueworks-room]').dataset.roomState === 'cleared_intake');
         record('route status text updates', document.querySelector('[data-room-status]').textContent === 'ROUTE OPEN');
+        record('interact disabled after repair', document.querySelector('[data-room-interact]').disabled);
+        click('[data-move="down"]');
+        click('[data-move="right"]');
+        click('[data-move="right"]');
+        click('[data-move="right"]');
+        click('[data-move="right"]');
+        record('cleared route blocker becomes passable', document.querySelector('[data-player]').style.getPropertyValue('--x') === '8');
         report.dataset.status = 'pass';
         report.textContent = ['Game shell smoke: PASS', ...checks.map((check) => `PASS ${{check.name}}`)].join('\\n');
       }} catch (error) {{
