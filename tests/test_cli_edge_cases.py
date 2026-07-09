@@ -54,6 +54,26 @@ class CliEdgeCaseTests(unittest.TestCase):
         self.assertIn("role=\"tablist\"", html)
         self.assertIn("data:image/svg+xml;base64", html)
 
+    def test_static_bundle_writes_vercel_ready_folder_without_running_solution(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "site"
+            stdout = io.StringIO()
+
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(["--static-bundle", str(output_dir)])
+
+            html = (output_dir / "index.html").read_text(encoding="utf-8")
+            vercel = (output_dir / "vercel.json").read_text(encoding="utf-8")
+            readme = (output_dir / "README.txt").read_text(encoding="utf-8")
+
+        self.assertEqual(0, exit_code)
+        self.assertIn("Wrote static browser bundle", stdout.getvalue())
+        self.assertIn("data-game-root data-screen=\"title\"", html)
+        self.assertIn("Start Chapter 0", html)
+        self.assertIn("local --game-html export", html)
+        self.assertIn('"cleanUrls": true', vercel)
+        self.assertIn("no backend, database, or environment variables", readme)
+
     def test_certification_cases_are_sealed_in_cli_output(self) -> None:
         source = """
 def solve(values):

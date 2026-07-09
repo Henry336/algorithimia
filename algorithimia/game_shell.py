@@ -46,6 +46,30 @@ def write_game_shell(output_path: Path) -> Path:
     return output_path
 
 
+def write_static_bundle(output_dir: Path) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    write_game_shell(output_dir / "index.html")
+    (output_dir / "vercel.json").write_text(
+        json.dumps({"cleanUrls": True, "trailingSlash": False}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (output_dir / "README.txt").write_text(
+        "\n".join(
+            (
+                "Algorithimia static browser bundle",
+                "",
+                "Entry point: index.html",
+                "Local check: open index.html in a browser.",
+                "Smoke check: open index.html?smoke=1 or index.html#smoke.",
+                "Vercel: deploy this folder as a static site; no backend, database, or environment variables are required for this pre-alpha bundle.",
+                "",
+            )
+        ),
+        encoding="utf-8",
+    )
+    return output_dir
+
+
 def render_game_shell() -> str:
     badge_sheet_uri = _svg_data_uri(BADGE_SHEET)
     event_sheet_uri = _svg_data_uri(EVENT_SHEET)

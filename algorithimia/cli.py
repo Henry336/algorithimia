@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .encounters import ENCOUNTERS, get_encounter
 from .engine import GameEngine
-from .game_shell import write_game_shell
+from .game_shell import write_game_shell, write_static_bundle
 from .language.python_adapter import PythonAdapter
 from .trace_viewer import write_trace_viewer
 from .visualizers import encounter_trace
@@ -35,6 +35,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="Write a static browser game shell for the current encounters and exit.",
     )
+    parser.add_argument(
+        "--static-bundle",
+        type=Path,
+        help="Write a Vercel-ready static browser bundle directory with index.html and deployment notes, then exit.",
+    )
     return parser
 
 
@@ -45,6 +50,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.game_html:
         output_path = write_game_shell(args.game_html)
         print(f"Wrote game shell: {output_path}")
+        return 0
+
+    if args.static_bundle:
+        output_dir = write_static_bundle(args.static_bundle)
+        print(f"Wrote static browser bundle: {output_dir}")
         return 0
 
     if args.trace_html:
