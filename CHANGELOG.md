@@ -45,6 +45,7 @@
 - Added generated build context to the optional browser self-smoke evidence card so QA can distinguish stale exported HTML from the latest game head.
 - Surfaced the generated build context in the normal browser shell header and made the optional self-smoke verify that it is visible before smoke-report scrolling.
 - Added `data-smoke-orientation` and a self-smoke copy-field check so browser evidence metadata and copyable text both carry the generated build context cleanly.
+- Added a static Algorithimia title/home screen to the browser shell, with `Start Chapter 0` opening the existing Queueworks room and the optional self-smoke verifying the title gate before room checks.
 
 ## 0.1.0 - 2026-07-08
 

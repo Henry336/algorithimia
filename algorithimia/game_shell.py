@@ -192,6 +192,115 @@ def render_game_shell() -> str:
       margin: 18px 0;
       padding: 14px;
     }}
+    .title-screen {{
+      min-height: min(70vh, 620px);
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(280px, 1.1fr);
+      gap: 18px;
+      align-items: stretch;
+      border-bottom: 2px solid var(--line);
+      padding: 22px 0 18px;
+    }}
+    .game-root[data-screen="game"] .title-screen {{
+      display: none;
+    }}
+    .game-root[data-screen="title"] .room-shell,
+    .game-root[data-screen="title"] .tabs,
+    .game-root[data-screen="title"] .panel {{
+      display: none;
+    }}
+    .title-copy {{
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }}
+    .title-kicker {{
+      color: var(--gold);
+      font: 0.82rem/1.25 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      text-transform: uppercase;
+    }}
+    .title-heading {{
+      font-size: clamp(2.1rem, 5vw, 4.25rem);
+      line-height: 0.95;
+    }}
+    .title-summary {{
+      max-width: 56ch;
+      color: var(--muted);
+      font-size: 1rem;
+    }}
+    .title-actions {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }}
+    .title-scene {{
+      position: relative;
+      min-height: 360px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+        linear-gradient(160deg, #213246 0%, #101923 58%, #0b1017 100%);
+      background-size: 48px 48px, 48px 48px, auto;
+    }}
+    .title-scene::before {{
+      content: "";
+      position: absolute;
+      inset: 28px 24px auto auto;
+      width: 116px;
+      height: 116px;
+      border: 2px solid rgba(56, 189, 248, 0.45);
+      box-shadow: inset 0 0 0 12px rgba(56, 189, 248, 0.08);
+      image-rendering: pixelated;
+    }}
+    .title-scene::after {{
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 92px;
+      border-top: 1px solid rgba(248, 250, 252, 0.1);
+      background: rgba(11, 16, 23, 0.62);
+    }}
+    .title-gate, .title-slime, .title-runner {{
+      position: absolute;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 10px 0 rgba(0, 0, 0, 0.28));
+      z-index: 1;
+    }}
+    .title-gate {{
+      width: 120px;
+      right: 16%;
+      bottom: 82px;
+    }}
+    .title-slime {{
+      width: 96px;
+      left: 44%;
+      bottom: 76px;
+    }}
+    .title-runner {{
+      width: 64px;
+      height: 64px;
+      left: 16%;
+      bottom: 82px;
+      border: 2px solid var(--cyan);
+      background-color: #203246;
+      background-image: var(--room-sheet);
+      background-repeat: no-repeat;
+      background-size: auto 64px;
+      background-position: -320px 0;
+    }}
+    .title-route {{
+      position: absolute;
+      left: 18%;
+      right: 16%;
+      bottom: 58px;
+      height: 18px;
+      border: 1px solid rgba(248, 193, 74, 0.36);
+      background: repeating-linear-gradient(90deg, rgba(248, 193, 74, 0.28) 0 16px, rgba(56, 189, 248, 0.14) 16px 32px);
+      z-index: 1;
+    }}
     .room-header {{
       display: flex;
       align-items: start;
@@ -708,6 +817,13 @@ def render_game_shell() -> str:
       .room-header {{
         display: grid;
       }}
+      .title-screen {{
+        min-height: auto;
+        grid-template-columns: 1fr;
+      }}
+      .title-scene {{
+        min-height: 280px;
+      }}
       .room-state {{
         justify-content: start;
         white-space: normal;
@@ -734,7 +850,7 @@ def render_game_shell() -> str:
   </style>
 </head>
 <body>
-  <main style="--room-feedback: url(&quot;{room_feedback_uri}&quot;); --room-retry: url(&quot;{room_retry_uri}&quot;); --smoke-icons: url(&quot;{smoke_icons_uri}&quot;)">
+  <main class="game-root" data-game-root data-screen="title" style="--room-feedback: url(&quot;{room_feedback_uri}&quot;); --room-retry: url(&quot;{room_retry_uri}&quot;); --smoke-icons: url(&quot;{smoke_icons_uri}&quot;)">
     <header class="topbar">
       <h1>Algorithimia</h1>
       <div class="status">
@@ -742,6 +858,23 @@ def render_game_shell() -> str:
         <span class="build-tag" data-build-context>{build_summary}</span>
       </div>
     </header>
+    <section class="title-screen" data-title-screen style="--room-sheet: url(&quot;{room_sheet_uri}&quot;)" aria-label="Algorithimia title screen">
+      <div class="title-copy">
+        <p class="title-kicker">Chapter 0 prototype</p>
+        <h2 class="title-heading">Algorithimia</h2>
+        <p class="title-summary">A jammed Queueworks intake is holding the first route shut. Start the local repair, reach the Sorting Slime, and prove the rune order holds.</p>
+        <div class="title-actions">
+          <button class="action primary" type="button" data-start-chapter>Start Chapter 0</button>
+          <span class="muted">Static browser bundle - ready to open locally or deploy as a single HTML artifact.</span>
+        </div>
+      </div>
+      <div class="title-scene" aria-label="Queueworks title tableau">
+        <div class="title-route" aria-hidden="true"></div>
+        <div class="title-runner" aria-label="Patchrunner title sprite"></div>
+        <img class="title-slime" src="{sorting_slime_uri}" alt="Sorting Slime title sprite">
+        <img class="title-gate" src="{queue_gate_uri}" alt="Queueworks title gate">
+      </div>
+    </section>
     <section class="room-shell" data-queueworks-room data-room-state="jammed_intake" style="--room-sheet: url(&quot;{room_sheet_uri}&quot;)">
       <div class="room-header">
         <div>
@@ -787,6 +920,18 @@ def render_game_shell() -> str:
 {panels}
   </main>
   <script>
+    const gameRoot = document.querySelector('[data-game-root]');
+    const startChapter = document.querySelector('[data-start-chapter]');
+    function showChapterZero() {{
+      if (!gameRoot) return;
+      gameRoot.dataset.screen = 'game';
+      const roomSurface = document.querySelector('[data-queueworks-room]');
+      if (roomSurface) roomSurface.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+    }}
+    if (startChapter) {{
+      startChapter.addEventListener('click', showChapterZero);
+    }}
+
     const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
     const panels = Array.from(document.querySelectorAll('[role="tabpanel"]'));
     function selectTab(tab) {{
@@ -1275,6 +1420,11 @@ def render_game_shell() -> str:
       }}
 
       try {{
+        readable('[data-title-screen]', 'title screen is visible before Chapter 0 starts', 'route_open_pass');
+        readable('[data-start-chapter]', 'start chapter control is visible on title screen', 'click_interact');
+        tapTargets('[data-start-chapter]', 'title start control meets 40px tap target', 'click_interact');
+        click('[data-start-chapter]');
+        record('Start Chapter 0 reveals playable room', document.querySelector('[data-game-root]').dataset.screen === 'game', 'route_open_pass');
         captureFirstViewport();
         readable('[data-room-status]', 'room status cue is visible before movement', 'blocked_collision');
         readable('[data-room-hint]', 'room hint cue is visible before movement', 'keyboard_move');
