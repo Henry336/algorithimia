@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import base64
+from datetime import datetime, timezone
 import html
+import json
 from pathlib import Path
+import subprocess
 
 from .encounters import ENCOUNTERS, Encounter
 from .visualizers import TraceEvent, encounter_trace_events
@@ -55,6 +58,7 @@ def render_game_shell() -> str:
     room_feedback_uri = _svg_data_uri(QUEUEWORKS_ROOM_FEEDBACK_SHEET)
     room_retry_uri = _svg_data_uri(QUEUEWORKS_ROOM_RETRY_SHEET)
     smoke_icons_uri = _svg_data_uri(QUEUEWORKS_BROWSER_SMOKE_ICONS)
+    build_context_json = json.dumps(_build_context(), ensure_ascii=True)
     encounters = tuple(ENCOUNTERS.values())
     tabs = "\n".join(_tab_button(encounter, index) for index, encounter in enumerate(encounters))
     panels = "\n".join(
@@ -1030,6 +1034,7 @@ def render_game_shell() -> str:
     function runGameShellSmoke() {{
       const report = document.querySelector('[data-smoke-report]');
       if (!report) return;
+      const buildContext = {build_context_json};
       const checks = [];
       let firstViewportSummary = 'not captured';
       function record(name, passed, icon = 'click_interact') {{
@@ -1156,6 +1161,7 @@ def render_game_shell() -> str:
         const passed = status === 'pass';
         const profile = viewportProfile();
         return [
+          {{ label: 'Build', value: buildContext.summary }},
           {{ label: 'State tested', value: 'first viewport, blocked route, interact-ready slime, wrong-order retry, route clear, repaired interaction, smoke report' }},
           {{ label: 'Result', value: passed ? 'pass' : `fail with label: ${{failureLabel}}` }},
           {{ label: 'Control path', value: 'ArrowRight, WASD, on-screen movement, Interact, Return, rune swaps, Check order' }},
@@ -1194,6 +1200,7 @@ def render_game_shell() -> str:
         report.dataset.smokeViewportProfile = profile.category;
         report.dataset.smokePageSize = profile.page;
         report.dataset.smokeFirstViewport = firstViewportSummary;
+        report.dataset.smokeBuild = buildContext.summary;
         report.setAttribute('aria-label', evidenceText);
         report.replaceChildren();
 
@@ -1439,3 +1446,30 @@ def _certification_block(encounter: Encounter, sheet_uri: str) -> str:
 def _svg_data_uri(path: Path) -> str:
     encoded = base64.b64encode(path.read_bytes()).decode("ascii")
     return f"data:image/svg+xml;base64,{encoded}"
+
+
+def _build_context() -> dict[str, str]:
+    exported_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    revision = _git_revision()
+    return {
+        "revision": revision,
+        "exportedAt": exported_at,
+        "source": "local --game-html export",
+        "summary": f"{revision}; exported {exported_at}; local --game-html export",
+    }
+
+
+def _git_revision() -> str:
+    repo_root = Path(__file__).resolve().parents[1]
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", "--short", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return "unknown revision"
+    revision = result.stdout.strip()
+    return revision or "unknown revision"
