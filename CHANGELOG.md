@@ -43,6 +43,7 @@
 - Added first-viewport composition capture to the optional browser self-smoke report so QA can tell whether the initial room/status/hint view was visible before smoke-report scrolling.
 - Fixed the optional browser self-smoke first-viewport target marker so the Sorting Slime visibility summary can detect the room object it already reports.
 - Added generated build context to the optional browser self-smoke evidence card so QA can distinguish stale exported HTML from the latest game head.
+- Surfaced the generated build context in the normal browser shell header and made the optional self-smoke verify that it is visible before smoke-report scrolling.
 
 ## 0.1.0 - 2026-07-08
 

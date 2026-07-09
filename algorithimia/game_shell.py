@@ -58,7 +58,9 @@ def render_game_shell() -> str:
     room_feedback_uri = _svg_data_uri(QUEUEWORKS_ROOM_FEEDBACK_SHEET)
     room_retry_uri = _svg_data_uri(QUEUEWORKS_ROOM_RETRY_SHEET)
     smoke_icons_uri = _svg_data_uri(QUEUEWORKS_BROWSER_SMOKE_ICONS)
-    build_context_json = json.dumps(_build_context(), ensure_ascii=True)
+    build_context = _build_context()
+    build_context_json = json.dumps(build_context, ensure_ascii=True)
+    build_summary = html.escape(build_context["summary"])
     encounters = tuple(ENCOUNTERS.values())
     tabs = "\n".join(_tab_button(encounter, index) for index, encounter in enumerate(encounters))
     panels = "\n".join(
@@ -127,9 +129,20 @@ def render_game_shell() -> str:
       letter-spacing: 0;
     }}
     .status {{
+      display: grid;
+      gap: 2px;
+      justify-items: end;
       color: var(--muted);
       font-size: 0.95rem;
       white-space: nowrap;
+    }}
+    .build-tag {{
+      max-width: min(58vw, 520px);
+      color: var(--gold);
+      font: 0.78rem/1.25 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      overflow-wrap: anywhere;
+      text-align: right;
+      white-space: normal;
     }}
     .tabs {{
       display: flex;
@@ -703,7 +716,12 @@ def render_game_shell() -> str:
         min-height: 288px;
       }}
       .status {{
+        justify-items: start;
         white-space: normal;
+      }}
+      .build-tag {{
+        max-width: 100%;
+        text-align: left;
       }}
       .panel.active {{
         display: grid;
@@ -719,7 +737,10 @@ def render_game_shell() -> str:
   <main style="--room-feedback: url(&quot;{room_feedback_uri}&quot;); --room-retry: url(&quot;{room_retry_uri}&quot;); --smoke-icons: url(&quot;{smoke_icons_uri}&quot;)">
     <header class="topbar">
       <h1>Algorithimia</h1>
-      <div class="status">Python prototype shell - code execution stays in the local CLI</div>
+      <div class="status">
+        <span>Python prototype shell - code execution stays in the local CLI</span>
+        <span class="build-tag" data-build-context>{build_summary}</span>
+      </div>
     </header>
     <section class="room-shell" data-queueworks-room data-room-state="jammed_intake" style="--room-sheet: url(&quot;{room_sheet_uri}&quot;)">
       <div class="room-header">
@@ -1256,6 +1277,7 @@ def render_game_shell() -> str:
         captureFirstViewport();
         readable('[data-room-status]', 'room status cue is visible before movement', 'blocked_collision');
         readable('[data-room-hint]', 'room hint cue is visible before movement', 'keyboard_move');
+        readable('[data-build-context]', 'build context is visible before smoke scroll', 'blocked_collision');
         viewportStable('initial room has no horizontal overflow', 'blocked_collision');
         tapTargets('[data-room-interact], [data-move], .tab', 'room controls meet 40px tap target', 'keyboard_move');
         textFits('[data-room-status]', 'room status text fits before movement', 'blocked_collision');
