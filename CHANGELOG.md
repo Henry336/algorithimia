@@ -47,6 +47,7 @@
 - Added `data-smoke-orientation` and a self-smoke copy-field check so browser evidence metadata and copyable text both carry the generated build context cleanly.
 - Added a static Algorithimia title/home screen to the browser shell, with `Start Chapter 0` opening the existing Queueworks room and the optional self-smoke verifying the title gate before room checks.
 - Added `--static-bundle` to export a Vercel-ready static folder with `index.html`, minimal `vercel.json`, and local/deploy notes for the current title/home and Chapter 0 browser shell.
+- Added a compact Chapter 0 briefing between the title screen and Queueworks room so Mira frames the jammed intake, Sorting Slime, and sealed trust check before player control.
 
 ## 0.1.0 - 2026-07-08
 

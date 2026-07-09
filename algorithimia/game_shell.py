@@ -228,8 +228,16 @@ def render_game_shell() -> str:
     .game-root[data-screen="game"] .title-screen {{
       display: none;
     }}
+    .game-root[data-screen="game"] .intro-screen {{
+      display: none;
+    }}
     .game-root[data-screen="title"] .room-shell,
+    .game-root[data-screen="title"] .intro-screen,
     .game-root[data-screen="title"] .tabs,
+    .game-root[data-screen="intro"] .title-screen,
+    .game-root[data-screen="intro"] .room-shell,
+    .game-root[data-screen="intro"] .tabs,
+    .game-root[data-screen="intro"] .panel,
     .game-root[data-screen="title"] .panel {{
       display: none;
     }}
@@ -324,6 +332,60 @@ def render_game_shell() -> str:
       border: 1px solid rgba(248, 193, 74, 0.36);
       background: repeating-linear-gradient(90deg, rgba(248, 193, 74, 0.28) 0 16px, rgba(56, 189, 248, 0.14) 16px 32px);
       z-index: 1;
+    }}
+    .intro-screen {{
+      min-height: min(64vh, 560px);
+      display: grid;
+      grid-template-columns: minmax(0, 0.72fr) minmax(280px, 1fr);
+      gap: 18px;
+      align-items: stretch;
+      padding: 18px 0;
+    }}
+    .intro-terminal {{
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }}
+    .intro-terminal h2 {{
+      margin: 0;
+      font-size: 1.6rem;
+    }}
+    .intro-lines {{
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }}
+    .intro-lines li {{
+      border-left: 4px solid var(--cyan);
+      background: var(--surface);
+      padding: 9px 10px;
+      color: var(--text);
+    }}
+    .intro-lines li:nth-child(2) {{
+      border-left-color: var(--gold);
+    }}
+    .intro-lines li:nth-child(3) {{
+      border-left-color: var(--green);
+    }}
+    .intro-brief {{
+      border: 1px solid var(--line);
+      background: var(--ink);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }}
+    .intro-objective {{
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+      color: var(--muted);
     }}
     .room-header {{
       display: flex;
@@ -845,6 +907,10 @@ def render_game_shell() -> str:
         min-height: auto;
         grid-template-columns: 1fr;
       }}
+      .intro-screen {{
+        min-height: auto;
+        grid-template-columns: 1fr;
+      }}
       .title-scene {{
         min-height: 280px;
       }}
@@ -899,6 +965,23 @@ def render_game_shell() -> str:
         <img class="title-gate" src="{queue_gate_uri}" alt="Queueworks title gate">
       </div>
     </section>
+    <section class="intro-screen" data-chapter-intro aria-label="Chapter 0 briefing">
+      <div class="intro-terminal">
+        <p class="title-kicker">Queueworks intake // Chapter 0</p>
+        <h2>Mira opens the repair channel.</h2>
+        <ul class="intro-lines">
+          <li>Mira: The intake is jammed. Put the runes in order and we can reopen the stair.</li>
+          <li>The Sorting Slime is holding loose routing runes across the gate.</li>
+          <li>The Archive will trust the repair only if it still works when the mess changes.</li>
+        </ul>
+        <button class="action primary" type="button" data-continue-chapter>Begin repair</button>
+      </div>
+      <div class="intro-brief">
+        <div class="intro-objective"><span class="feedback-icon" data-icon="move_hint" aria-hidden="true"></span><span>Move through the intake room with arrow keys, WASD, or on-screen controls.</span></div>
+        <div class="intro-objective"><span class="feedback-icon" data-icon="interact_ready" aria-hidden="true"></span><span>Approach the Sorting Slime and interact to open the rune-order repair.</span></div>
+        <div class="intro-objective"><span class="feedback-icon" data-icon="sealed_check_ready" aria-hidden="true"></span><span>Visible runes teach the pattern; sealed checks stay hidden.</span></div>
+      </div>
+    </section>
     <section class="room-shell" data-queueworks-room data-room-state="jammed_intake" style="--room-sheet: url(&quot;{room_sheet_uri}&quot;)">
       <div class="room-header">
         <div>
@@ -946,6 +1029,13 @@ def render_game_shell() -> str:
   <script>
     const gameRoot = document.querySelector('[data-game-root]');
     const startChapter = document.querySelector('[data-start-chapter]');
+    const continueChapter = document.querySelector('[data-continue-chapter]');
+    function showChapterZeroIntro() {{
+      if (!gameRoot) return;
+      gameRoot.dataset.screen = 'intro';
+      const introSurface = document.querySelector('[data-chapter-intro]');
+      if (introSurface) introSurface.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+    }}
     function showChapterZero() {{
       if (!gameRoot) return;
       gameRoot.dataset.screen = 'game';
@@ -953,7 +1043,10 @@ def render_game_shell() -> str:
       if (roomSurface) roomSurface.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
     }}
     if (startChapter) {{
-      startChapter.addEventListener('click', showChapterZero);
+      startChapter.addEventListener('click', showChapterZeroIntro);
+    }}
+    if (continueChapter) {{
+      continueChapter.addEventListener('click', showChapterZero);
     }}
 
     const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
@@ -1352,9 +1445,9 @@ def render_game_shell() -> str:
         const profile = viewportProfile();
         return [
           {{ label: 'Build', value: buildContext.summary }},
-          {{ label: 'State tested', value: 'first viewport, blocked route, interact-ready slime, wrong-order retry, route clear, repaired interaction, smoke report' }},
+          {{ label: 'State tested', value: 'title, Chapter 0 intro, first viewport, blocked route, interact-ready slime, wrong-order retry, route clear, repaired interaction, smoke report' }},
           {{ label: 'Result', value: passed ? 'pass' : `fail with label: ${{failureLabel}}` }},
-          {{ label: 'Control path', value: 'ArrowRight, WASD, on-screen movement, Interact, Return, rune swaps, Check order' }},
+          {{ label: 'Control path', value: 'Start Chapter 0, Begin repair, ArrowRight, WASD, on-screen movement, Interact, Return, rune swaps, Check order' }},
           {{ label: 'Viewport', value: profile.viewport }},
           {{ label: 'Viewport profile', value: profile.capture }},
           {{ label: 'Orientation', value: profile.orientation }},
@@ -1448,7 +1541,12 @@ def render_game_shell() -> str:
         readable('[data-start-chapter]', 'start chapter control is visible on title screen', 'click_interact');
         tapTargets('[data-start-chapter]', 'title start control meets 40px tap target', 'click_interact');
         click('[data-start-chapter]');
-        record('Start Chapter 0 reveals playable room', document.querySelector('[data-game-root]').dataset.screen === 'game', 'route_open_pass');
+        record('Start Chapter 0 reveals intro briefing', document.querySelector('[data-game-root]').dataset.screen === 'intro', 'route_open_pass');
+        readable('[data-chapter-intro]', 'Chapter 0 intro briefing is visible before room control', 'route_open_pass');
+        readable('[data-continue-chapter]', 'begin repair control is visible in intro briefing', 'click_interact');
+        tapTargets('[data-continue-chapter]', 'begin repair control meets 40px tap target', 'click_interact');
+        click('[data-continue-chapter]');
+        record('Begin repair reveals playable room', document.querySelector('[data-game-root]').dataset.screen === 'game', 'route_open_pass');
         captureFirstViewport();
         readable('[data-room-status]', 'room status cue is visible before movement', 'blocked_collision');
         readable('[data-room-hint]', 'room hint cue is visible before movement', 'keyboard_move');
