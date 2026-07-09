@@ -1219,6 +1219,7 @@ def render_game_shell() -> str:
         report.dataset.smokeLabel = failureLabel;
         report.dataset.smokeViewport = profile.viewport;
         report.dataset.smokeViewportProfile = profile.category;
+        report.dataset.smokeOrientation = profile.orientation;
         report.dataset.smokePageSize = profile.page;
         report.dataset.smokeFirstViewport = firstViewportSummary;
         report.dataset.smokeBuild = buildContext.summary;
@@ -1322,6 +1323,9 @@ def render_game_shell() -> str:
         click('[data-move="right"]');
         record('cleared route blocker becomes passable', playerGridPosition().x === '8', 'blocked_collision');
         renderSmokeReport('pass');
+        const copyField = document.querySelector('[data-smoke-copy="evidence"]');
+        record('copyable smoke evidence includes build context', Boolean(copyField) && copyField.value.includes(`Build: ${{buildContext.summary}}`), 'route_open_pass');
+        record('smoke report orientation metadata is captured', report.dataset.smokeOrientation === viewportProfile().orientation, 'route_open_pass');
         readable('[data-smoke-report]', 'smoke report is visible after completion', 'route_open_pass');
         reportRowsReadable('smoke report rows keep readable height', 'route_open_pass');
         viewportStable('smoke report has no horizontal overflow', 'route_open_pass');

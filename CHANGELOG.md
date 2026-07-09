@@ -44,6 +44,7 @@
 - Fixed the optional browser self-smoke first-viewport target marker so the Sorting Slime visibility summary can detect the room object it already reports.
 - Added generated build context to the optional browser self-smoke evidence card so QA can distinguish stale exported HTML from the latest game head.
 - Surfaced the generated build context in the normal browser shell header and made the optional self-smoke verify that it is visible before smoke-report scrolling.
+- Added `data-smoke-orientation` and a self-smoke copy-field check so browser evidence metadata and copyable text both carry the generated build context cleanly.
 
 ## 0.1.0 - 2026-07-08
 
