@@ -48,6 +48,7 @@
 - Added a static Algorithimia title/home screen to the browser shell, with `Start Chapter 0` opening the existing Queueworks room and the optional self-smoke verifying the title gate before room checks.
 - Added `--static-bundle` to export a Vercel-ready static folder with `index.html`, minimal `vercel.json`, and local/deploy notes for the current title/home and Chapter 0 browser shell.
 - Added a compact Chapter 0 briefing between the title screen and Queueworks room so Mira frames the jammed intake, Sorting Slime, and sealed trust check before player control.
+- Tightened the Chapter 0 room handoff so the playable room opens with Mira's arrival line, an explicit Sorting Slime objective, a route-clear aftermath line, and matching self-smoke checks.
 
 ## 0.1.0 - 2026-07-08
 

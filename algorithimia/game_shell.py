@@ -970,7 +970,7 @@ def render_game_shell() -> str:
         <p class="title-kicker">Queueworks intake // Chapter 0</p>
         <h2>Mira opens the repair channel.</h2>
         <ul class="intro-lines">
-          <li>Mira: The intake is jammed. Put the runes in order and we can reopen the stair.</li>
+          <li>Mira: You're late, but so is the stair. Start with the jam.</li>
           <li>The Sorting Slime is holding loose routing runes across the gate.</li>
           <li>The Archive will trust the repair only if it still works when the mess changes.</li>
         </ul>
@@ -1016,8 +1016,8 @@ def render_game_shell() -> str:
           <button class="action move-right" type="button" data-move="right" aria-label="Move right">Right</button>
         </div>
         <button class="action primary" type="button" data-room-interact disabled>Interact</button>
-        <div class="room-hint"><span class="feedback-icon" data-icon="move_hint" aria-hidden="true"></span><span data-room-hint>move close, then test the repair</span></div>
-        <div class="room-log" data-room-log>Use arrow keys, WASD, or the buttons to reach the Sorting Slime.</div>
+        <div class="room-hint"><span class="feedback-icon" data-icon="move_hint" aria-hidden="true"></span><span data-room-hint>Find the Sorting Slime and inspect the loose runes.</span></div>
+        <div class="room-log" data-room-log>Mira: You're late, but so is the stair. Start with the jam. Objective: Find the Sorting Slime and inspect the loose runes.</div>
       </div>
       <div class="smoke-report" data-smoke-report aria-live="polite"></div>
     </section>
@@ -1112,7 +1112,7 @@ def render_game_shell() -> str:
           roomStateIcon.dataset.icon = isNearSlime() ? 'interact_ready' : 'move_hint';
           roomHint.textContent = isNearSlime()
             ? 'Sort the runes and test the repair?'
-            : 'move close, then test the repair';
+            : 'Find the Sorting Slime and inspect the loose runes.';
           interact.textContent = 'Interact';
         }}
       }}
@@ -1137,7 +1137,7 @@ def render_game_shell() -> str:
         }} else {{
           roomLog.textContent = isNearSlime()
             ? 'The slime is holding the intake shut. Sort the runes and test the repair?'
-            : 'Queueworks floor clear. Move next to the Sorting Slime.';
+            : 'Find the Sorting Slime and inspect the loose runes.';
         }}
         renderRoom();
       }}
@@ -1190,7 +1190,7 @@ def render_game_shell() -> str:
       window.algorithimiaRoom = {{
         markSortingSlimeCleared() {{
           roomState = 'cleared_intake';
-          roomLog.textContent = 'Route clear. The stair will let you through.';
+          roomLog.textContent = 'The stair accepts the repair and the intake starts moving again.';
           renderRoom();
           room.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
         }},
@@ -1445,7 +1445,7 @@ def render_game_shell() -> str:
         const profile = viewportProfile();
         return [
           {{ label: 'Build', value: buildContext.summary }},
-          {{ label: 'State tested', value: 'title, Chapter 0 intro, first viewport, blocked route, interact-ready slime, wrong-order retry, route clear, repaired interaction, smoke report' }},
+          {{ label: 'State tested', value: 'title, Chapter 0 intro, arrival objective, first viewport, blocked route, interact-ready slime, wrong-order retry, route-clear aftermath, repaired interaction, smoke report' }},
           {{ label: 'Result', value: passed ? 'pass' : `fail with label: ${{failureLabel}}` }},
           {{ label: 'Control path', value: 'Start Chapter 0, Begin repair, ArrowRight, WASD, on-screen movement, Interact, Return, rune swaps, Check order' }},
           {{ label: 'Viewport', value: profile.viewport }},
@@ -1455,7 +1455,7 @@ def render_game_shell() -> str:
           {{ label: 'First viewport', value: firstViewportSummary }},
           {{ label: 'Capture quality', value: 'self-smoke generated; mark manual capture clear, cropped, or inconclusive during review' }},
           {{ label: 'Observed cause', value: passed ? 'self-smoke checks passed in this browser viewport' : failureLabel }},
-          {{ label: 'Manual review', value: 'confirm first-viewport composition, blocked route, interact-ready slime, wrong-order retry, route clear, repaired interaction, and narrow/mobile readability' }},
+          {{ label: 'Manual review', value: 'confirm arrival objective, first-viewport composition, blocked route, interact-ready slime, wrong-order retry, route-clear aftermath, repaired interaction, and narrow/mobile readability' }},
           {{ label: 'Text/icon/collision agreement', value: passed ? 'cue text, smoke icons, blocked collision, and route clearing agreed' : 'review failed row against cue text, smoke icon, collision, or route state' }},
           {{ label: 'Likely owner', value: passed ? 'Agent 4 or Henry for live readability judgment' : 'Agent 3 if this is placement, timing, state pairing, button, or layout' }},
           {{ label: 'Next action', value: passed ? 'manual browser readability pass or same-room polish only' : 'fix the labeled same-room failure before new content' }},
@@ -1547,9 +1547,11 @@ def render_game_shell() -> str:
         tapTargets('[data-continue-chapter]', 'begin repair control meets 40px tap target', 'click_interact');
         click('[data-continue-chapter]');
         record('Begin repair reveals playable room', document.querySelector('[data-game-root]').dataset.screen === 'game', 'route_open_pass');
+        record('arrival objective is shown in room log', document.querySelector('[data-room-log]').textContent.includes('Find the Sorting Slime and inspect the loose runes.'), 'keyboard_move');
         captureFirstViewport();
         readable('[data-room-status]', 'room status cue is visible before movement', 'blocked_collision');
         readable('[data-room-hint]', 'room hint cue is visible before movement', 'keyboard_move');
+        readable('[data-room-log]', 'arrival objective log is visible before movement', 'keyboard_move');
         readable('[data-build-context]', 'build context is visible before smoke scroll', 'blocked_collision');
         viewportStable('initial room has no horizontal overflow', 'blocked_collision');
         tapTargets('[data-room-interact], [data-move], .tab', 'room controls meet 40px tap target', 'keyboard_move');
@@ -1580,6 +1582,7 @@ def render_game_shell() -> str:
         record('visible spill clears after swaps', document.querySelector('[data-sorting-slime-playfield]').dataset.state === 'cleared', 'route_open_pass');
         click('[data-return-room]');
         record('success return opens route', document.querySelector('[data-queueworks-room]').dataset.roomState === 'cleared_intake', 'route_open_pass');
+        record('route-clear aftermath appears in room log', document.querySelector('[data-room-log]').textContent.includes('intake starts moving again'), 'route_open_pass');
         record('route status text updates', document.querySelector('[data-room-status]').textContent === 'ROUTE OPEN', 'route_open_pass');
         readable('[data-room-status]', 'route-open status cue is visible after success', 'route_open_pass');
         readable('[data-room-hint]', 'route-open hint cue is visible after success', 'route_open_pass');
