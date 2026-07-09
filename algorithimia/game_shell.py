@@ -228,16 +228,24 @@ def render_game_shell() -> str:
     .game-root[data-screen="game"] .title-screen {{
       display: none;
     }}
-    .game-root[data-screen="game"] .intro-screen {{
+    .game-root[data-screen="game"] .intro-screen,
+    .game-root[data-screen="game"] .handoff-screen {{
       display: none;
     }}
     .game-root[data-screen="title"] .room-shell,
     .game-root[data-screen="title"] .intro-screen,
+    .game-root[data-screen="title"] .handoff-screen,
     .game-root[data-screen="title"] .tabs,
     .game-root[data-screen="intro"] .title-screen,
+    .game-root[data-screen="intro"] .handoff-screen,
     .game-root[data-screen="intro"] .room-shell,
     .game-root[data-screen="intro"] .tabs,
     .game-root[data-screen="intro"] .panel,
+    .game-root[data-screen="handoff"] .title-screen,
+    .game-root[data-screen="handoff"] .intro-screen,
+    .game-root[data-screen="handoff"] .room-shell,
+    .game-root[data-screen="handoff"] .tabs,
+    .game-root[data-screen="handoff"] .panel,
     .game-root[data-screen="title"] .panel {{
       display: none;
     }}
@@ -386,6 +394,62 @@ def render_game_shell() -> str:
       gap: 8px;
       align-items: start;
       color: var(--muted);
+    }}
+    .handoff-screen {{
+      min-height: min(48vh, 420px);
+      display: grid;
+      gap: 14px;
+      align-content: center;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(56, 189, 248, 0.08), transparent 24%, rgba(248, 193, 74, 0.08)),
+        var(--panel);
+      margin: 18px 0;
+      padding: 18px;
+    }}
+    .handoff-track {{
+      position: relative;
+      min-height: 92px;
+      border: 1px solid rgba(248, 250, 252, 0.16);
+      background:
+        repeating-linear-gradient(90deg, rgba(248, 193, 74, 0.24) 0 18px, rgba(56, 189, 248, 0.14) 18px 36px),
+        rgba(12, 18, 26, 0.74);
+      overflow: hidden;
+    }}
+    .handoff-track::before {{
+      content: "";
+      position: absolute;
+      inset: 30px 12% auto 12%;
+      height: 20px;
+      border: 1px solid rgba(248, 193, 74, 0.42);
+      background: rgba(248, 193, 74, 0.1);
+    }}
+    .handoff-runner {{
+      position: absolute;
+      left: 18%;
+      bottom: 18px;
+      width: 48px;
+      height: 48px;
+      border: 2px solid var(--cyan);
+      background-color: #203246;
+      background-image: var(--room-sheet);
+      background-repeat: no-repeat;
+      background-size: auto 48px;
+      background-position: -240px 0;
+      image-rendering: pixelated;
+    }}
+    .handoff-gate {{
+      position: absolute;
+      right: 16%;
+      bottom: 14px;
+      width: 80px;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 8px 0 rgba(0, 0, 0, 0.26));
+    }}
+    .handoff-copy {{
+      display: grid;
+      gap: 8px;
+      max-width: 62ch;
     }}
     .room-header {{
       display: flex;
@@ -982,6 +1046,18 @@ def render_game_shell() -> str:
         <div class="intro-objective"><span class="feedback-icon" data-icon="sealed_check_ready" aria-hidden="true"></span><span>Visible runes teach the pattern; sealed checks stay hidden.</span></div>
       </div>
     </section>
+    <section class="handoff-screen" data-room-handoff style="--room-sheet: url(&quot;{room_sheet_uri}&quot;)" aria-label="Queueworks room transition">
+      <div class="handoff-copy">
+        <p class="title-kicker">Intake approach</p>
+        <h2>The stair shudders, then waits.</h2>
+        <p class="muted">The route will not move until the local rune order holds. Step into the room, reach the slime, and start the repair.</p>
+      </div>
+      <div class="handoff-track" aria-label="Patchrunner approaching the blocked Queueworks gate">
+        <div class="handoff-runner" aria-label="Patchrunner approaches the intake"></div>
+        <img class="handoff-gate" src="{queue_gate_uri}" alt="Blocked Queueworks handoff gate">
+      </div>
+      <button class="action primary" type="button" data-enter-room>Enter intake</button>
+    </section>
     <section class="room-shell" data-queueworks-room data-room-state="jammed_intake" style="--room-sheet: url(&quot;{room_sheet_uri}&quot;)">
       <div class="room-header">
         <div>
@@ -1030,11 +1106,18 @@ def render_game_shell() -> str:
     const gameRoot = document.querySelector('[data-game-root]');
     const startChapter = document.querySelector('[data-start-chapter]');
     const continueChapter = document.querySelector('[data-continue-chapter]');
+    const enterRoom = document.querySelector('[data-enter-room]');
     function showChapterZeroIntro() {{
       if (!gameRoot) return;
       gameRoot.dataset.screen = 'intro';
       const introSurface = document.querySelector('[data-chapter-intro]');
       if (introSurface) introSurface.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+    }}
+    function showRoomHandoff() {{
+      if (!gameRoot) return;
+      gameRoot.dataset.screen = 'handoff';
+      const handoffSurface = document.querySelector('[data-room-handoff]');
+      if (handoffSurface) handoffSurface.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
     }}
     function showChapterZero() {{
       if (!gameRoot) return;
@@ -1046,7 +1129,10 @@ def render_game_shell() -> str:
       startChapter.addEventListener('click', showChapterZeroIntro);
     }}
     if (continueChapter) {{
-      continueChapter.addEventListener('click', showChapterZero);
+      continueChapter.addEventListener('click', showRoomHandoff);
+    }}
+    if (enterRoom) {{
+      enterRoom.addEventListener('click', showChapterZero);
     }}
 
     const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
@@ -1445,9 +1531,9 @@ def render_game_shell() -> str:
         const profile = viewportProfile();
         return [
           {{ label: 'Build', value: buildContext.summary }},
-          {{ label: 'State tested', value: 'title, Chapter 0 intro, arrival objective, first viewport, blocked route, interact-ready slime, wrong-order retry, route-clear aftermath, repaired interaction, smoke report' }},
+          {{ label: 'State tested', value: 'title, Chapter 0 intro, room handoff, arrival objective, first viewport, blocked route, interact-ready slime, wrong-order retry, route-clear aftermath, repaired interaction, smoke report' }},
           {{ label: 'Result', value: passed ? 'pass' : `fail with label: ${{failureLabel}}` }},
-          {{ label: 'Control path', value: 'Start Chapter 0, Begin repair, ArrowRight, WASD, on-screen movement, Interact, Return, rune swaps, Check order' }},
+          {{ label: 'Control path', value: 'Start Chapter 0, Begin repair, Enter intake, ArrowRight, WASD, on-screen movement, Interact, Return, rune swaps, Check order' }},
           {{ label: 'Viewport', value: profile.viewport }},
           {{ label: 'Viewport profile', value: profile.capture }},
           {{ label: 'Orientation', value: profile.orientation }},
@@ -1546,6 +1632,11 @@ def render_game_shell() -> str:
         readable('[data-continue-chapter]', 'begin repair control is visible in intro briefing', 'click_interact');
         tapTargets('[data-continue-chapter]', 'begin repair control meets 40px tap target', 'click_interact');
         click('[data-continue-chapter]');
+        record('Begin repair reveals room handoff', document.querySelector('[data-game-root]').dataset.screen === 'handoff', 'route_open_pass');
+        readable('[data-room-handoff]', 'room handoff is visible before playable room', 'route_open_pass');
+        readable('[data-enter-room]', 'enter intake control is visible in room handoff', 'click_interact');
+        tapTargets('[data-enter-room]', 'enter intake control meets 40px tap target', 'click_interact');
+        click('[data-enter-room]');
         record('Begin repair reveals playable room', document.querySelector('[data-game-root]').dataset.screen === 'game', 'route_open_pass');
         record('arrival objective is shown in room log', document.querySelector('[data-room-log]').textContent.includes('Find the Sorting Slime and inspect the loose runes.'), 'keyboard_move');
         captureFirstViewport();
