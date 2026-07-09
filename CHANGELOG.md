@@ -40,6 +40,7 @@
 - Added copyable text and machine-readable result metadata to the optional browser self-smoke report so Agent 4 or Henry can capture live-browser evidence more reliably.
 - Added viewport profile and page-size metadata to the optional browser self-smoke report so narrow/mobile evidence is easier to classify.
 - Added orientation, capture-quality, and manual-review prompts to the optional browser self-smoke evidence card so normal/narrow browser findings are easier to report.
+- Added first-viewport composition capture to the optional browser self-smoke report so QA can tell whether the initial room/status/hint view was visible before smoke-report scrolling.
 
 ## 0.1.0 - 2026-07-08
 

@@ -1031,9 +1031,44 @@ def render_game_shell() -> str:
       const report = document.querySelector('[data-smoke-report]');
       if (!report) return;
       const checks = [];
+      let firstViewportSummary = 'not captured';
       function record(name, passed, icon = 'click_interact') {{
         checks.push({{ name, passed, icon }});
         if (!passed) throw new Error(name);
+      }}
+      function visibleInViewport(selector) {{
+        const element = document.querySelector(selector);
+        if (!element) return false;
+        const rect = element.getBoundingClientRect();
+        const styles = getComputedStyle(element);
+        return (
+          styles.display !== 'none' &&
+          styles.visibility !== 'hidden' &&
+          Number(styles.opacity || 1) > 0 &&
+          rect.width >= 16 &&
+          rect.height >= 16 &&
+          rect.bottom > 0 &&
+          rect.right > 0 &&
+          rect.top < window.innerHeight &&
+          rect.left < window.innerWidth
+        );
+      }}
+      function captureFirstViewport() {{
+        window.scrollTo(0, 0);
+        const surfaces = [
+          ['room', '[data-queueworks-room]'],
+          ['status', '[data-room-status]'],
+          ['hint', '[data-room-hint]'],
+          ['slime', '[data-room-object="sorting_slime"]'],
+          ['interact', '[data-room-interact]'],
+        ];
+        const visible = surfaces
+          .filter((surface) => visibleInViewport(surface[1]))
+          .map((surface) => surface[0]);
+        firstViewportSummary = visible.length ? visible.join(', ') : 'none';
+        record('first viewport shows room shell before smoke scroll', visible.includes('room'), 'blocked_collision');
+        record('first viewport shows room status before smoke scroll', visible.includes('status'), 'blocked_collision');
+        record('first viewport shows room hint before smoke scroll', visible.includes('hint'), 'keyboard_move');
       }}
       function click(selector) {{
         const element = document.querySelector(selector);
@@ -1121,16 +1156,17 @@ def render_game_shell() -> str:
         const passed = status === 'pass';
         const profile = viewportProfile();
         return [
-          {{ label: 'State tested', value: 'blocked route, interact-ready slime, wrong-order retry, route clear, repaired interaction, smoke report' }},
+          {{ label: 'State tested', value: 'first viewport, blocked route, interact-ready slime, wrong-order retry, route clear, repaired interaction, smoke report' }},
           {{ label: 'Result', value: passed ? 'pass' : `fail with label: ${{failureLabel}}` }},
           {{ label: 'Control path', value: 'ArrowRight, WASD, on-screen movement, Interact, Return, rune swaps, Check order' }},
           {{ label: 'Viewport', value: profile.viewport }},
           {{ label: 'Viewport profile', value: profile.capture }},
           {{ label: 'Orientation', value: profile.orientation }},
           {{ label: 'Page size', value: profile.page }},
+          {{ label: 'First viewport', value: firstViewportSummary }},
           {{ label: 'Capture quality', value: 'self-smoke generated; mark manual capture clear, cropped, or inconclusive during review' }},
           {{ label: 'Observed cause', value: passed ? 'self-smoke checks passed in this browser viewport' : failureLabel }},
-          {{ label: 'Manual review', value: 'confirm blocked route, interact-ready slime, wrong-order retry, route clear, repaired interaction, and narrow/mobile readability' }},
+          {{ label: 'Manual review', value: 'confirm first-viewport composition, blocked route, interact-ready slime, wrong-order retry, route clear, repaired interaction, and narrow/mobile readability' }},
           {{ label: 'Text/icon/collision agreement', value: passed ? 'cue text, smoke icons, blocked collision, and route clearing agreed' : 'review failed row against cue text, smoke icon, collision, or route state' }},
           {{ label: 'Likely owner', value: passed ? 'Agent 4 or Henry for live readability judgment' : 'Agent 3 if this is placement, timing, state pairing, button, or layout' }},
           {{ label: 'Next action', value: passed ? 'manual browser readability pass or same-room polish only' : 'fix the labeled same-room failure before new content' }},
@@ -1157,6 +1193,7 @@ def render_game_shell() -> str:
         report.dataset.smokeViewport = profile.viewport;
         report.dataset.smokeViewportProfile = profile.category;
         report.dataset.smokePageSize = profile.page;
+        report.dataset.smokeFirstViewport = firstViewportSummary;
         report.setAttribute('aria-label', evidenceText);
         report.replaceChildren();
 
@@ -1209,6 +1246,7 @@ def render_game_shell() -> str:
       }}
 
       try {{
+        captureFirstViewport();
         readable('[data-room-status]', 'room status cue is visible before movement', 'blocked_collision');
         readable('[data-room-hint]', 'room hint cue is visible before movement', 'keyboard_move');
         viewportStable('initial room has no horizontal overflow', 'blocked_collision');
